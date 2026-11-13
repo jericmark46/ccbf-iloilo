@@ -1,5 +1,5 @@
 import '../src/config/env.js';
-import app, { ensureReady } from '../src/app.js';
+import app, { ensureReady } from '../src/application.js';
 import { disconnectDB } from '../src/config/db.js';
 
 const PORT = Number(process.env.PORT) || 5000;
