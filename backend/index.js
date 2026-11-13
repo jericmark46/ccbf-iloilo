@@ -13,6 +13,7 @@ import mongoose from 'mongoose';
 import { connectDB } from './src/config/db.js';
 import { ensureSeeded } from './src/seedData.js';
 import { requireAuth } from './src/middleware/auth.js';
+import { auditTrail } from './src/middleware/audit.js';
 import { uploadDir } from './src/middleware/upload.js';
 import { notFound, errorHandler } from './src/middleware/errors.js';
 import authRoutes from './src/routes/auth.js';
@@ -122,7 +123,8 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/public', publicRoutes);
-app.use('/api/admin', requireAuth, adminRoutes);
+// requireAuth fills in req.user, which the audit trail needs to name the actor.
+app.use('/api/admin', requireAuth, auditTrail, adminRoutes);
 
 app.use('/api', notFound);
 

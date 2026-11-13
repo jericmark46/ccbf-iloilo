@@ -10,6 +10,7 @@ import {
   getRequestToken,
   requireAuth,
 } from '../middleware/auth.js';
+import { recordAudit } from '../middleware/audit.js';
 
 const router = Router();
 
@@ -40,6 +41,17 @@ router.post(
 
     const token = signToken(user);
     setAuthCookie(res, token);
+
+    // Sign-in is worth recording even though it is not an admin route.
+    req.user = user;
+    await recordAudit({
+      req,
+      action: 'signed-in',
+      entity: 'auth',
+      label: user.email,
+      summary: 'signed in to the admin',
+    });
+
     // The token is returned as well so browsers that block third-party cookies
     // can authenticate with an Authorization: Bearer header instead.
     res.json({ user: user.toSafeJSON(), token });

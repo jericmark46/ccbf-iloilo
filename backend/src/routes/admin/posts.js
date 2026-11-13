@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import Post, { POST_CATEGORIES } from '../../models/Post.js';
+import Post from '../../models/Post.js';
 import Comment from '../../models/Comment.js';
+import { resolveCategoryName } from '../../utils/categories.js';
 import { asyncHandler, assert, str, bool, parsePagination, escapeRegex } from '../../utils/http.js';
 import { cleanRichText } from '../../utils/richText.js';
 
@@ -45,7 +46,7 @@ router.post(
     const content = cleanRichText(req.body.content, 20000);
     assert(content.length >= 3, 400, 'Please write the update before publishing.');
 
-    const category = POST_CATEGORIES.includes(req.body.category) ? req.body.category : 'Announcement';
+    const category = await resolveCategoryName(req.body.category);
     const post = await Post.create({
       title: str(req.body.title, 160),
       content,
@@ -74,8 +75,8 @@ router.put(
       assert(content.length >= 3, 400, 'Please write the update before saving.');
       post.content = content;
     }
-    if (req.body.category !== undefined && POST_CATEGORIES.includes(req.body.category)) {
-      post.category = req.body.category;
+    if (req.body.category !== undefined) {
+      post.category = await resolveCategoryName(req.body.category, post.category);
     }
     if (req.body.coverImage !== undefined) post.coverImage = str(req.body.coverImage, 600);
     if (req.body.media !== undefined) post.media = mediaList(req.body.media);

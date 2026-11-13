@@ -7,6 +7,8 @@ import Ministry from './models/Ministry.js';
 import Activity from './models/Activity.js';
 import GivingOption from './models/GivingOption.js';
 import SiteSettings from './models/SiteSettings.js';
+import UpdateCategory, { DEFAULT_CATEGORY_NAMES } from './models/UpdateCategory.js';
+import { toSlug } from './utils/slug.js';
 
 const img = (name) => `/images/${name}.png`;
 
@@ -489,6 +491,7 @@ export async function seedDatabase({ reset = false } = {}) {
       GivingOption.deleteMany({}),
       NavLink.deleteMany({}),
       SiteSettings.deleteMany({}),
+      UpdateCategory.deleteMany({}),
     ]);
   }
 
@@ -538,6 +541,18 @@ export async function seedDatabase({ reset = false } = {}) {
   if ((await GivingOption.countDocuments()) === 0) {
     await GivingOption.create(GIVING);
     console.log('[seed] Giving options created.');
+  }
+
+  if ((await UpdateCategory.countDocuments()) === 0) {
+    await UpdateCategory.create(
+      DEFAULT_CATEGORY_NAMES.map((name, index) => ({
+        name,
+        slug: toSlug(name, `category-${index}`),
+        order: index,
+        visible: true,
+      }))
+    );
+    console.log('[seed] Update categories created.');
   }
 
   if ((await Post.countDocuments()) === 0) {

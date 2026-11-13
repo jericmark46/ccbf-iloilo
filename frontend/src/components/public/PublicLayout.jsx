@@ -1,6 +1,7 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { WifiOff, RotateCcw } from 'lucide-react';
 import { useSite } from '../../context/SiteContext';
+import { useVisitTracker } from '../../hooks/useUi';
 import { Navbar } from './Navbar';
 import { Footer } from './Footer';
 import { FullPageLoader } from '../ui/Loaders';
@@ -26,6 +27,9 @@ function SiteUnavailable({ message, onRetry }) {
 
 export function PublicLayout() {
   const { loading, error, refresh } = useSite();
+  const { pathname } = useLocation();
+
+  useVisitTracker(pathname);
 
   if (loading) return <FullPageLoader />;
   if (error) return <SiteUnavailable message={error} onRetry={refresh} />;

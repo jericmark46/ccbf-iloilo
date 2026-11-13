@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { MessageSquare, RefreshCw } from 'lucide-react';
 import { api, getError } from '../../api/client';
 import { PostCard } from '../../components/public/PostCard';
@@ -10,16 +10,7 @@ import { cn } from '../../lib/utils';
 import { useSite } from '../../context/SiteContext';
 import { copyValue } from '../../lib/copy';
 
-const CATEGORIES = [
-  'All',
-  'Announcement',
-  'Event',
-  'Sermon',
-  'Ministry',
-  'Testimony',
-  'Outreach',
-  'General',
-];
+const ALL_CATEGORIES = 'All';
 
 function PostSkeleton() {
   return (
@@ -42,16 +33,22 @@ function PostSkeleton() {
 }
 
 export default function UpdatesPage() {
-  const { settings } = useSite();
+  const { settings, categories } = useSite();
   const copy = (key) => copyValue(settings, key);
   const [items, setItems] = useState([]);
-  const [category, setCategory] = useState('All');
+  const [category, setCategory] = useState(ALL_CATEGORIES);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState('');
+
+  // Only categories the church has left visible appear as filters.
+  const categoryOptions = useMemo(
+    () => [ALL_CATEGORIES, ...(categories || []).map((item) => item.name)],
+    [categories]
+  );
 
   useEffect(() => {
     let active = true;
@@ -102,7 +99,7 @@ export default function UpdatesPage() {
         <div className="container-x grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <div className="min-w-0">
             <div className="flex flex-wrap gap-2">
-              {CATEGORIES.map((item) => (
+              {categoryOptions.map((item) => (
                 <button
                   key={item}
                   type="button"

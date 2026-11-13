@@ -35,6 +35,7 @@ export function SiteProvider({ children }) {
       activities: data?.activities || [],
       giving: data?.giving || [],
       pages: data?.pages || [],
+      categories: data?.categories || [],
       loading,
       error,
       refresh: () => load(true),

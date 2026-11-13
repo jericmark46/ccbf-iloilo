@@ -27,6 +27,7 @@ const CommentsAdmin = lazy(() => import('./pages/admin/CommentsAdmin'));
 const MessagesAdmin = lazy(() => import('./pages/admin/MessagesAdmin'));
 const NavigationAdmin = lazy(() => import('./pages/admin/NavigationAdmin'));
 const UsersAdmin = lazy(() => import('./pages/admin/UsersAdmin'));
+const ActivityLogAdmin = lazy(() => import('./pages/admin/ActivityLogAdmin'));
 const SettingsAdmin = lazy(() => import('./pages/admin/SettingsAdmin'));
 const AccountAdmin = lazy(() => import('./pages/admin/AccountAdmin'));
 
@@ -107,6 +108,14 @@ export default function App() {
               element={
                 <RequireSuperadmin>
                   <UsersAdmin />
+                </RequireSuperadmin>
+              }
+            />
+            <Route
+              path="logs"
+              element={
+                <RequireSuperadmin>
+                  <ActivityLogAdmin />
                 </RequireSuperadmin>
               }
             />

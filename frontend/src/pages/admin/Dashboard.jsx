@@ -18,10 +18,11 @@ import { api, getError } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { PageHeader, Panel, PanelHeader, StatCard } from '../../components/admin/AdminUI';
+import { VisitsChart } from '../../components/admin/VisitsChart';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Badge } from '../../components/ui/Badge';
 import { Skeleton } from '../../components/ui/Loaders';
-import { formatDate, relativeTime } from '../../lib/dates';
+import { formatDate, formatShortDate, relativeTime } from '../../lib/dates';
 
 const greeting = () => {
   const hour = new Date().getHours();
@@ -42,6 +43,7 @@ export default function Dashboard() {
   const toast = useToast();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [visits, setVisits] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -55,7 +57,25 @@ export default function Dashboard() {
     };
   }, [toast]);
 
+  // Traffic is a nice-to-have: a failure here should never block the dashboard.
+  useEffect(() => {
+    let active = true;
+    api
+      .get('/admin/visits')
+      .then(({ data: payload }) => active && setVisits(payload))
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const totals = data?.totals || {};
+
+  const previousViews = visits?.previous?.totalViews || 0;
+  const visitDelta =
+    visits && previousViews > 0
+      ? Math.round(((visits.totalViews - previousViews) / previousViews) * 100)
+      : null;
 
   return (
     <div className="space-y-8">
@@ -128,6 +148,60 @@ export default function Dashboard() {
               <StatCard icon={Sparkles} label="Role" value="Admin" hint="Content & media steward" tone="accent" />
             )}
           </div>
+
+          {visits && (
+            <Panel>
+              <PanelHeader
+                title="Site visits"
+                description={`${visits.label} · page views recorded on the public website`}
+                actions={<Badge variant="accent">{visits.isCurrentMonth ? 'This month' : visits.label}</Badge>}
+              />
+              <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-center">
+                <div className="min-w-0">
+                  <p className="text-[0.58rem] font-semibold uppercase tracking-[0.22em] text-faint">
+                    Page views
+                  </p>
+                  <p className="mt-1.5 font-display text-[2.6rem] font-semibold leading-none text-ink">
+                    {visits.totalViews}
+                  </p>
+                  <p className="mt-2 text-xs text-soft">
+                    {visits.uniqueVisitors}{' '}
+                    {visits.uniqueVisitors === 1 ? 'unique visitor' : 'unique visitors'}
+                  </p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    {visitDelta !== null && (
+                      <Badge variant={visitDelta >= 0 ? 'success' : 'warning'}>
+                        {visitDelta >= 0 ? '+' : ''}
+                        {visitDelta}% vs last month
+                      </Badge>
+                    )}
+                    {visits.peakDay && <Badge>Busiest {formatShortDate(visits.peakDay.day)}</Badge>}
+                  </div>
+                </div>
+                <div className="min-w-0">
+                  <VisitsChart days={visits.days} />
+                </div>
+              </div>
+              {visits.topPages?.length > 0 && (
+                <div className="border-t border-line/70 px-5 py-4 sm:px-6">
+                  <p className="text-[0.58rem] font-semibold uppercase tracking-[0.22em] text-faint">
+                    Most visited pages
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {visits.topPages.map((page) => (
+                      <span
+                        key={page.path}
+                        className="inline-flex max-w-full items-center gap-2 rounded-full border border-line bg-surface/60 px-3 py-1.5 text-[0.7rem]"
+                      >
+                        <span className="truncate font-medium text-ink">{page.path}</span>
+                        <span className="shrink-0 text-faint">{page.views}</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </Panel>
+          )}
 
           <div className="grid gap-5 xl:grid-cols-[1.35fr_1fr]">
             <Panel>

@@ -7,6 +7,7 @@ import {
   FileText,
   HandCoins,
   HeartHandshake,
+  History,
   Image,
   Inbox,
   LayoutDashboard,
@@ -60,6 +61,7 @@ const sections = [
     items: [
       { to: '/admin/navigation', label: 'Navigation', icon: Link2 },
       { to: '/admin/users', label: 'Accounts', icon: Users },
+      { to: '/admin/logs', label: 'Activity log', icon: History },
     ],
   },
 ];
@@ -75,6 +77,7 @@ const titles = [
   { match: '/admin/messages', title: 'Inbox' },
   { match: '/admin/navigation', title: 'Navigation' },
   { match: '/admin/users', title: 'Accounts' },
+  { match: '/admin/logs', title: 'Activity log' },
   { match: '/admin/settings', title: 'Site settings' },
   { match: '/admin/account', title: 'My account' },
   { match: '/admin', title: 'Dashboard' },

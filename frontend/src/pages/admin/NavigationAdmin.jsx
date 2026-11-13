@@ -13,6 +13,7 @@ import { api, getError } from '../../api/client';
 import { useSite } from '../../context/SiteContext';
 import { useToast } from '../../context/ToastContext';
 import { PageHeader, Panel, Switch } from '../../components/admin/AdminUI';
+import UpdateCategoriesPanel from '../../components/admin/UpdateCategoriesPanel';
 import { SelectField, TextField } from '../../components/admin/fields';
 import { Modal } from '../../components/ui/Modal';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
@@ -288,7 +289,7 @@ export default function NavigationAdmin() {
       <PageHeader
         kicker="Administration"
         title="Navigation"
-        description="Build the website menu. Top-level links can hold one level of child links, like Donate → Give online."
+        description="Build the website menu and manage the categories used by the Updates page. Top-level links can hold one level of child links, like Donate → Give online."
         actions={
           <button type="button" className="btn btn-accent btn-sm" onClick={() => openCreate()}>
             <Plus className="h-3.5 w-3.5" /> Add link
@@ -357,6 +358,8 @@ export default function NavigationAdmin() {
           </div>
         )}
       </Panel>
+
+      <UpdateCategoriesPanel />
 
       <Modal
         open={formOpen}

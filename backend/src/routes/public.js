@@ -9,8 +9,11 @@ import Ministry from '../models/Ministry.js';
 import Activity from '../models/Activity.js';
 import GivingOption from '../models/GivingOption.js';
 import ContactMessage from '../models/ContactMessage.js';
+import PageVisit from '../models/PageVisit.js';
 import { asyncHandler, assert, str, parsePagination, escapeRegex } from '../utils/http.js';
 import { buildNavTree } from '../utils/nav.js';
+import { visibleCategories } from '../utils/categories.js';
+import { dayKey, visitorHash, isBot, normalizePath } from '../utils/visits.js';
 
 const router = Router();
 
@@ -38,6 +41,15 @@ const likeLimiter = rateLimit({
   message: { error: 'Too many reactions. Please try again later.' },
 });
 
+// The website reports one view per page; this only guards against abuse.
+const visitLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many page views.' },
+});
+
 function startOfDay() {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
@@ -47,7 +59,7 @@ function startOfDay() {
 router.get(
   '/bootstrap',
   asyncHandler(async (_req, res) => {
-    const [settings, navLinks, posts, ministries, activities, giving, pages] = await Promise.all([
+    const [settings, navLinks, posts, ministries, activities, giving, pages, categories] = await Promise.all([
       SiteSettings.findOne({ key: 'site' }),
       NavLink.find().sort({ order: 1, createdAt: 1 }),
       Post.find({ published: true }).sort({ pinned: -1, createdAt: -1 }).limit(6),
@@ -57,6 +69,7 @@ router.get(
         .limit(6),
       GivingOption.find({ published: true }).sort({ order: 1 }),
       Page.find({ published: true }).select('slug title subtitle updatedAt').sort({ title: 1 }),
+      visibleCategories(),
     ]);
 
     const settledSettings = settings || (await SiteSettings.create({ key: 'site' }));
@@ -69,6 +82,7 @@ router.get(
       activities,
       giving,
       pages,
+      categories: categories.map((doc) => ({ id: doc.id, name: doc.name, slug: doc.slug })),
     });
   })
 );
@@ -225,6 +239,23 @@ router.get(
     ];
 
     res.json({ results });
+  })
+);
+
+router.post(
+  '/visit',
+  visitLimiter,
+  asyncHandler(async (req, res) => {
+    const path = normalizePath(str(req.body.path, 200));
+    // Admin screens and crawlers are not part of the public traffic report.
+    if (path.startsWith('/admin') || isBot(req)) return res.json({ ok: true, skipped: true });
+
+    await PageVisit.create({
+      day: dayKey(),
+      path,
+      visitor: visitorHash(req),
+    });
+    res.status(201).json({ ok: true });
   })
 );
 

@@ -1,20 +1,14 @@
 import mongoose from 'mongoose';
 
-export const POST_CATEGORIES = [
-  'Announcement',
-  'Event',
-  'Sermon',
-  'Ministry',
-  'Testimony',
-  'Outreach',
-  'General',
-];
-
+// Categories are managed in the database (see models/UpdateCategory.js) so the
+// church can add, rename, hide, or remove them from the admin instead of asking
+// for a code change. `category` stays a plain string so existing updates keep
+// their label even if the category is later hidden or deleted.
 const postSchema = new mongoose.Schema(
   {
     title: { type: String, default: '', trim: true, maxlength: 160 },
     content: { type: String, required: true, trim: true },
-    category: { type: String, enum: POST_CATEGORIES, default: 'Announcement', index: true },
+    category: { type: String, default: 'Announcement', trim: true, maxlength: 40, index: true },
     coverImage: { type: String, default: '' },
     media: [
       {

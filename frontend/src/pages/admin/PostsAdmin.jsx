@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ExternalLink, Image as ImageIcon, Pencil, Pin, Plus, Trash2 } from 'lucide-react';
 import { api, getError } from '../../api/client';
@@ -14,12 +14,10 @@ import { InlineLoader, Spinner } from '../../components/ui/Loaders';
 import { formatDate } from '../../lib/dates';
 import { cn } from '../../lib/utils';
 
-const CATEGORIES = ['Announcement', 'Event', 'Sermon', 'Ministry', 'Testimony', 'Outreach', 'General'];
-
 const emptyPost = {
   title: '',
   content: '',
-  category: 'Announcement',
+  category: '',
   coverImage: '',
   media: [],
   pinned: false,
@@ -45,6 +43,36 @@ export default function PostsAdmin() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(null);
   const [removing, setRemoving] = useState(false);
+  const [categories, setCategories] = useState([]);
+
+  // Categories live in Navigation → Update categories, so they are fetched
+  // rather than hardcoded here.
+  const loadCategories = useCallback(async () => {
+    try {
+      const { data } = await api.get('/admin/categories');
+      setCategories(data.categories || []);
+    } catch (err) {
+      toast.error(getError(err));
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories]);
+
+  const visibleCategories = useMemo(
+    () => categories.filter((item) => item.visible),
+    [categories]
+  );
+  const defaultCategory = visibleCategories[0]?.name || 'Announcement';
+
+  // A post may sit in a category that was later hidden; keep it selectable so
+  // editing the post never silently moves it somewhere else.
+  const pickerOptions = useMemo(() => {
+    const names = visibleCategories.map((item) => item.name);
+    if (form.category && !names.includes(form.category)) names.unshift(form.category);
+    return names;
+  }, [visibleCategories, form.category]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -74,9 +102,9 @@ export default function PostsAdmin() {
 
   const openCreate = useCallback(() => {
     setEditing(null);
-    setForm(emptyPost);
+    setForm({ ...emptyPost, category: defaultCategory });
     setFormOpen(true);
-  }, []);
+  }, [defaultCategory]);
 
   useEffect(() => {
     if (searchParams.get('compose') === '1') {
@@ -90,7 +118,7 @@ export default function PostsAdmin() {
     setForm({
       title: post.title || '',
       content: post.content || '',
-      category: post.category || 'Announcement',
+      category: post.category || defaultCategory,
       coverImage: post.coverImage || '',
       media: post.media || [],
       pinned: Boolean(post.pinned),
@@ -126,6 +154,7 @@ export default function PostsAdmin() {
       }
       closeForm();
       load();
+      loadCategories();
     } catch (err) {
       toast.error(getError(err));
     } finally {
@@ -181,9 +210,9 @@ export default function PostsAdmin() {
               onChange={(event) => setCategory(event.target.value)}
             >
               <option value="All">All categories</option>
-              {CATEGORIES.map((item) => (
-                <option key={item} value={item}>
-                  {item}
+              {categories.map((item) => (
+                <option key={item.id} value={item.name}>
+                  {item.visible ? item.name : `${item.name} (hidden)`}
                 </option>
               ))}
             </select>
@@ -317,7 +346,8 @@ export default function PostsAdmin() {
               label="Category"
               value={form.category}
               onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value }))}
-              options={CATEGORIES}
+              options={pickerOptions}
+              hint="Manage this list in Navigation → Update categories."
             />
             <Field label="Visibility" hint="Drafts stay hidden from the public website.">
               <div className="flex gap-2">

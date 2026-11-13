@@ -11,6 +11,9 @@ import mediaRouter from './media.js';
 import messagesRouter from './messages.js';
 import settingsRouter from './settings.js';
 import navRouter from './nav.js';
+import categoriesRouter from './categories.js';
+import visitsRouter from './visits.js';
+import logsRouter from './logs.js';
 import usersRouter from './users.js';
 
 const router = Router();
@@ -26,9 +29,13 @@ router.use('/giving', givingRouter);
 router.use('/media', mediaRouter);
 router.use('/messages', messagesRouter);
 router.use('/settings', settingsRouter);
+router.use('/visits', visitsRouter);
+// Readable by every admin (the update editor needs it); writes are superadmin-only.
+router.use('/categories', categoriesRouter);
 
 // Superadmin only
 router.use('/nav', requireRole('superadmin'), navRouter);
+router.use('/logs', logsRouter); // guards itself; read-only audit trail
 router.use('/users', requireRole('superadmin'), usersRouter);
 
 export default router;
