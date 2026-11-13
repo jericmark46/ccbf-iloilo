@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
   "description": "REST API for Calvary Chapel Iloilo",
   "scripts": {
     "dev": "nodemon --watch src --watch index.js index.js",
