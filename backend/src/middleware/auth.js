@@ -27,11 +27,18 @@ export function clearAuthCookie(res) {
   res.clearCookie(COOKIE_NAME, { path: '/', sameSite, secure });
 }
 
+// Cross-site deployments (for example a Vercel frontend on a different domain)
+// can have the auth cookie dropped by third-party cookie blocking, so the same
+// JWT is also accepted from the Authorization header.
+export function getRequestToken(req) {
+  const header = req.headers.authorization || '';
+  const bearer = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
+  return req.cookies?.[COOKIE_NAME] || bearer || null;
+}
+
 export async function requireAuth(req, res, next) {
   try {
-    const header = req.headers.authorization || '';
-    const bearer = header.startsWith('Bearer ') ? header.slice(7) : null;
-    const token = req.cookies?.[COOKIE_NAME] || bearer;
+    const token = getRequestToken(req);
     if (!token) return res.status(401).json({ error: 'Please sign in to continue.' });
 
     const payload = jwt.verify(token, process.env.JWT_SECRET);

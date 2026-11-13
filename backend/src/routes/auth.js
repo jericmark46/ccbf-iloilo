@@ -1,11 +1,13 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
+import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import { asyncHandler, assert, str } from '../utils/http.js';
 import {
   signToken,
   setAuthCookie,
   clearAuthCookie,
+  getRequestToken,
   requireAuth,
 } from '../middleware/auth.js';
 
@@ -38,7 +40,9 @@ router.post(
 
     const token = signToken(user);
     setAuthCookie(res, token);
-    res.json({ user: user.toSafeJSON() });
+    // The token is returned as well so browsers that block third-party cookies
+    // can authenticate with an Authorization: Bearer header instead.
+    res.json({ user: user.toSafeJSON(), token });
   })
 );
 
@@ -51,9 +55,7 @@ router.get(
   '/me',
   asyncHandler(async (req, res) => {
     try {
-      const { COOKIE_NAME } = await import('../middleware/auth.js');
-      const jwt = (await import('jsonwebtoken')).default;
-      const token = req.cookies?.[COOKIE_NAME];
+      const token = getRequestToken(req);
       if (!token) return res.json({ user: null });
       const payload = jwt.verify(token, process.env.JWT_SECRET);
       const user = await User.findById(payload.sub);

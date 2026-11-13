@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { api } from '../api/client';
+import { api, tokenStore } from '../api/client';
 
 const AuthContext = createContext(null);
 
@@ -12,6 +12,7 @@ export function AuthProvider({ children }) {
     (async () => {
       try {
         const { data } = await api.get('/auth/me');
+        if (!data.user) tokenStore.clear();
         if (mounted) setUser(data.user || null);
       } catch {
         if (mounted) setUser(null);
@@ -24,13 +25,22 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
+  // The API drops a stored token whenever a request comes back unauthenticated.
+  useEffect(() => {
+    const onExpired = () => setUser(null);
+    window.addEventListener('cc:session-expired', onExpired);
+    return () => window.removeEventListener('cc:session-expired', onExpired);
+  }, []);
+
   const login = useCallback(async (email, password) => {
     const { data } = await api.post('/auth/login', { email, password });
+    tokenStore.set(data.token);
     setUser(data.user);
     return data.user;
   }, []);
 
   const logout = useCallback(async () => {
+    tokenStore.clear();
     try {
       await api.post('/auth/logout');
     } finally {
@@ -41,6 +51,7 @@ export function AuthProvider({ children }) {
   const refresh = useCallback(async () => {
     try {
       const { data } = await api.get('/auth/me');
+      if (!data.user) tokenStore.clear();
       setUser(data.user || null);
       return data.user;
     } catch {
