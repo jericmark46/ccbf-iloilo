@@ -1,8 +1,6 @@
-'use strict';
-
 let appPromise;
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   if (req.headers['x-probe'] === '1') {
     res.statusCode = 200;
     res.setHeader('content-type', 'application/json');
@@ -32,4 +30,4 @@ module.exports = async function handler(req, res) {
       })
     );
   }
-};
+}
