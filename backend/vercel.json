@@ -1,4 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "MONGOMS_DISABLE_POSTINSTALL=1 npm install"
+  "installCommand": "MONGOMS_DISABLE_POSTINSTALL=1 npm install",
+  "rewrites": [{ "source": "/(.*)", "destination": "/api" }]
 }
