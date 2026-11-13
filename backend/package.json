@@ -12,7 +12,7 @@
   "config": {
     "mongodbMemoryServer": {
       "version": "4.4.29",
-      "downloadDir": "D:/Calvary Chapel/Website/backend/.cache/mongodb-binaries"
+      "downloadDir": ".cache/mongodb-binaries"
     }
   },
   "dependencies": {
