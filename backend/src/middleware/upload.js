@@ -3,8 +3,16 @@ import path from 'node:path';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 
-export const uploadDir = path.resolve(process.cwd(), 'uploads');
-fs.mkdirSync(uploadDir, { recursive: true });
+// Vercel only allows writes under /tmp; anything else must use external storage.
+export const uploadDir = process.env.VERCEL
+  ? path.join('/tmp', 'uploads')
+  : path.resolve(process.cwd(), 'uploads');
+
+try {
+  fs.mkdirSync(uploadDir, { recursive: true });
+} catch (error) {
+  console.warn(`[upload] Could not create upload directory: ${error.message}`);
+}
 
 const allowed = new Set([
   'image/jpeg',

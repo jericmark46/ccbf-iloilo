@@ -2,7 +2,8 @@ import mongoose from 'mongoose';
 import path from 'node:path';
 import fs from 'node:fs';
 
-const dataDir = path.resolve(process.cwd(), '.data', 'db');
+const isServerless = Boolean(process.env.VERCEL);
+const dataDir = path.join(isServerless ? '/tmp' : process.cwd(), '.data', 'db');
 
 async function startEmbeddedMongo() {
   const { MongoMemoryServer } = await import('mongodb-memory-server');
@@ -33,8 +34,14 @@ async function startEmbeddedMongo() {
 }
 
 export async function connectDB() {
+  if (mongoose.connection.readyState === 1) return { mode: 'mongo' };
+
   const uri = process.env.MONGODB_URI?.trim();
   const dbName = process.env.MONGODB_DB_NAME || 'calvary_chapel';
+
+  if (!uri && isServerless) {
+    throw new Error('MONGODB_URI is not set. Add it to the Vercel project environment variables.');
+  }
 
   if (uri) {
     try {
@@ -43,8 +50,9 @@ export async function connectDB() {
       return { mode: 'mongo' };
     } catch (error) {
       console.warn(`[db] Configured MongoDB unreachable: ${error.message}`);
+      // The embedded database cannot run on Vercel; fail loudly instead of downloading binaries.
       const allowFallback =
-        process.env.NODE_ENV !== 'production' && process.env.USE_MEMORY_DB !== 'false';
+        !isServerless && process.env.NODE_ENV !== 'production' && process.env.USE_MEMORY_DB !== 'false';
       if (!allowFallback) throw error;
     }
   }

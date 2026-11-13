@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm';
 import { Link, useNavigate } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 import { isRichHtml, sanitizeRich } from '../../lib/richText';
+import { apiOrigin, assetUrl } from '../../lib/urls';
 
 export function Markdown({ children, className }) {
   return (
@@ -27,7 +28,7 @@ export function Markdown({ children, className }) {
             );
           },
           img: ({ src = '', alt = '' }) => (
-            <img src={src} alt={alt} loading="lazy" className="my-6 w-full rounded-3xl border border-line" />
+            <img src={assetUrl(src)} alt={alt} loading="lazy" className="my-6 w-full rounded-3xl border border-line" />
           ),
         }}
       >
@@ -39,7 +40,12 @@ export function Markdown({ children, className }) {
 
 export function RichContent({ children = '', className }) {
   const navigate = useNavigate();
-  const html = useMemo(() => (isRichHtml(children) ? sanitizeRich(children) : null), [children]);
+  const html = useMemo(() => {
+    if (!isRichHtml(children)) return null;
+    const sanitized = sanitizeRich(children);
+    if (!apiOrigin) return sanitized;
+    return sanitized.replace(/(src|href)="\/uploads\//g, (_, attr) => `${attr}="${apiOrigin}/uploads/`);
+  }, [children]);
 
   if (!children?.trim()) return null;
 

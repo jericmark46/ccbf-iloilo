@@ -450,24 +450,26 @@ async function ensureUsers() {
       email: (process.env.SUPERADMIN_EMAIL || 'superadmin@calvarychapeliloilo.org').toLowerCase(),
       password: process.env.SUPERADMIN_PASSWORD,
       role: 'superadmin',
+      passwordEnv: 'SUPERADMIN_PASSWORD',
     },
     {
       name: process.env.ADMIN_NAME || 'Church Admin',
       email: (process.env.ADMIN_EMAIL || 'admin@calvarychapeliloilo.org').toLowerCase(),
       password: process.env.ADMIN_PASSWORD,
       role: 'admin',
+      passwordEnv: 'ADMIN_PASSWORD',
     },
   ];
-
-  if (seeds.some((seed) => !seed.password)) {
-    throw new Error('Set SUPERADMIN_PASSWORD and ADMIN_PASSWORD in backend/.env before seeding accounts.');
-  }
 
   const users = [];
   for (const seed of seeds) {
     let user = await User.findOne({ email: seed.email });
     if (!user) {
-      user = await User.create(seed);
+      if (!seed.password) {
+        throw new Error(`Set ${seed.passwordEnv} in the environment before seeding the ${seed.role} account.`);
+      }
+      const { passwordEnv, ...account } = seed;
+      user = await User.create(account);
       console.log(`[seed] Created ${seed.role}: ${seed.email}`);
     }
     users.push(user);
