@@ -1,7 +1,4 @@
 import express from 'express';
-import sanitizeHtml from 'sanitize-html';
-
-void sanitizeHtml;
 
 const app = express();
 
