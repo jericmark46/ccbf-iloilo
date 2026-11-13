@@ -45,7 +45,7 @@ export async function connectDB() {
 
   if (uri) {
     try {
-      await mongoose.connect(uri, { dbName, serverSelectionTimeoutMS: 9000 });
+      await mongoose.connect(uri, { dbName, serverSelectionTimeoutMS: isServerless ? 5000 : 9000 });
       console.log(`[db] Connected to configured MongoDB (${dbName})`);
       return { mode: 'mongo' };
     } catch (error) {
