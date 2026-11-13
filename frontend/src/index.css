@@ -116,12 +116,37 @@
 
   html {
     scroll-behavior: smooth;
+    /* Paint the canvas with the page colour so Android never shows a white or
+       black gutter when the browser chrome collapses or the page overscrolls. */
+    background-color: rgb(var(--c-surface));
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    overflow-x: clip;
   }
 
   body {
     @apply bg-surface font-sans text-ink antialiased;
     min-height: 100vh;
+    min-height: 100dvh;
+    /* Stops decorative/offscreen elements from creating a sideways scroll on
+       phones, which is what makes a mobile page feel broken. `clip` (unlike
+       `hidden`) does not turn the body into a scroll container. */
+    overflow-x: clip;
     font-feature-settings: 'ss01' on, 'cv11' on;
+  }
+
+  img,
+  video,
+  canvas {
+    max-width: 100%;
+  }
+
+  button,
+  a,
+  label,
+  summary,
+  [role='button'] {
+    touch-action: manipulation;
   }
 
   ::selection {
@@ -170,7 +195,15 @@
 /* ─── Components ──────────────────────────────────────────────── */
 @layer components {
   .container-x {
-    @apply mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-10;
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-8 lg:px-10;
+  }
+
+  /* Grid/flex tracks default to min-content and cannot shrink, which makes long
+     unbreakable content (addresses, URLs) blow the whole page wider than the
+     phone screen. Letting direct children shrink keeps every layout inside the
+     viewport instead of relying on overflow clipping. */
+  .container-x > * {
+    min-width: 0;
   }
 
   .btn {
@@ -259,7 +292,7 @@
   }
 
   .section {
-    @apply py-20 sm:py-24 lg:py-28;
+    @apply py-16 sm:py-24 lg:py-28;
   }
 
   .noise {
@@ -465,5 +498,26 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* ─── Mobile browsers (Android Chrome, Samsung Internet, iOS) ── */
+/* Chrome zooms the whole page when a focused control renders below 16px. */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea,
+  .field {
+    font-size: 16px;
+  }
+}
+
+/* Keep the fixed header/drawer clear of notches and gesture bars. */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
 }

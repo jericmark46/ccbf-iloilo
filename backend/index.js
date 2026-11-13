@@ -32,12 +32,42 @@ app.use(
   })
 );
 
-const origins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173')
+const configuredOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173')
   .split(',')
-  .map((value) => value.trim())
+  .map((value) => value.trim().replace(/\/+$/, ''))
   .filter(Boolean);
 
-app.use(cors({ origin: origins.length ? origins : true, credentials: true }));
+// Optional regex for preview deployments, e.g. ^https://ccbf-iloilo[a-z0-9-]*\.vercel\.app$
+const originPattern = process.env.CLIENT_ORIGIN_REGEX
+  ? new RegExp(process.env.CLIENT_ORIGIN_REGEX)
+  : null;
+
+const isLocalOrigin = (origin) => /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(origin);
+
+const corsOptions = {
+  credentials: true,
+  methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  // The admin sends its JWT as a bearer token, so the preflight must allow it.
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400,
+  origin(origin, callback) {
+    // No Origin header: same-origin calls, server-to-server, curl.
+    if (!origin) return callback(null, true);
+    const clean = origin.replace(/\/+$/, '');
+    if (
+      configuredOrigins.includes(clean) ||
+      isLocalOrigin(clean) ||
+      (originPattern && originPattern.test(clean))
+    ) {
+      return callback(null, true);
+    }
+    // Rejecting here only withholds the CORS headers; the browser does the rest.
+    console.warn('[cors] Blocked origin:', clean);
+    return callback(null, false);
+  },
+};
+
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -62,6 +92,14 @@ export function ensureReady() {
   }
   return readyPromise;
 }
+
+// API payloads include sessions and church data, so keep them out of any shared
+// cache. This also stops browsers from reusing an older cached response (for
+// example one stored without CORS headers) after a deployment.
+app.use('/api', (_req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
 
 app.use('/api', async (_req, _res, next) => {
   try {

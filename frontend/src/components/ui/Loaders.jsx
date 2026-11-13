@@ -16,7 +16,7 @@ export function InlineLoader({ label = 'Loading…', className }) {
 
 export function FullPageLoader({ label = 'Preparing your visit…' }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-surface px-6">
+    <div className="flex min-h-[100dvh] flex-col items-center justify-center gap-6 bg-surface px-6">
       <div className="relative grid h-16 w-16 place-items-center rounded-3xl bg-gradient-to-br from-[#3d316e] via-[#251c47] to-[#120d24] text-[#e3c178] shadow-lift">
         <img src="/images/cci-white.png" alt="" className="h-10 w-10 object-contain" draggable={false} />
       </div>

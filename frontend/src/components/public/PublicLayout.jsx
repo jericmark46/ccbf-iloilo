@@ -8,7 +8,7 @@ import { Logo } from '../ui/Logo';
 
 function SiteUnavailable({ message, onRetry }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-surface px-6 text-center">
+    <div className="flex min-h-[100dvh] flex-col items-center justify-center gap-6 bg-surface px-6 text-center">
       <Logo to={null} />
       <span className="grid h-14 w-14 place-items-center rounded-2xl bg-accent/10 text-accent">
         <WifiOff className="h-6 w-6" />
@@ -31,7 +31,7 @@ export function PublicLayout() {
   if (error) return <SiteUnavailable message={error} onRetry={refresh} />;
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface">
+    <div className="flex min-h-[100dvh] flex-col bg-surface">
       <Navbar />
       <main className="flex-1">
         <Outlet />

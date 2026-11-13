@@ -72,7 +72,7 @@ export function Hero({ settings, nextActivity }) {
         <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-surface to-transparent" />
       </div>
 
-      <div className="container-x relative z-10 pb-32 pt-40 sm:pt-44">
+      <div className="container-x relative z-10 pb-16 pt-28 sm:pb-32 sm:pt-44">
         <div className="mx-auto max-w-5xl text-center">
           <motion.div
             initial={{ opacity: 0, y: 14 }}
@@ -80,7 +80,7 @@ export function Hero({ settings, nextActivity }) {
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             className="mb-8 flex justify-center"
           >
-            <span className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/[0.06] px-4 py-1.5 text-[0.6rem] font-semibold uppercase tracking-[0.28em] text-white/75 backdrop-blur-md">
+            <span className="inline-flex max-w-full items-center gap-3 rounded-full border border-white/15 bg-white/[0.06] px-4 py-1.5 text-[0.58rem] font-semibold uppercase leading-relaxed tracking-[0.2em] text-white/75 backdrop-blur-md sm:text-[0.6rem] sm:tracking-[0.28em]">
               <span className="h-1 w-1 rounded-full bg-[#e7c77e]" />
               {settings?.heroKicker || 'A Bible-believing fellowship · Iloilo City'}
             </span>
@@ -98,7 +98,7 @@ export function Hero({ settings, nextActivity }) {
                 <span className="mb-1.5 block font-sans text-[0.6rem] font-semibold uppercase tracking-[0.42em] text-[#e7c77e] sm:mb-2 sm:text-[0.68rem]">
                   {line.label}
                 </span>
-                <span className="block text-[2.55rem] sm:text-[3.6rem] lg:text-[4.6rem] xl:text-[5rem]">
+                <span className="block text-[clamp(2rem,9.5vw,2.6rem)] sm:text-[3.4rem] lg:text-[4.6rem] xl:text-[5rem]">
                   {line.text}
                 </span>
               </motion.span>
@@ -109,7 +109,7 @@ export function Hero({ settings, nextActivity }) {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
-            className="mx-auto mt-8 max-w-xl text-pretty text-[0.98rem] leading-relaxed text-white/70 sm:text-lg"
+            className="mx-auto mt-6 max-w-xl text-pretty text-base leading-relaxed text-white/70 sm:mt-8 sm:text-lg"
           >
             {settings?.heroSubtitle || 'Come as you are. Leave changed by the Word of God.'}
           </motion.p>
@@ -118,11 +118,14 @@ export function Hero({ settings, nextActivity }) {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.65, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-10 flex flex-wrap items-center justify-center gap-3"
+            className="mt-8 flex flex-col items-stretch justify-center gap-3 px-1 sm:mt-10 sm:flex-row sm:flex-wrap sm:items-center sm:px-0"
           >
             {buttons.map((button) => {
               const external = /^https?:\/\//i.test(button.href || '');
-              const className = cn('group btn btn-lg', buttonStyles[button.style] || 'btn-accent');
+              const className = cn(
+                'group btn btn-lg w-full sm:w-auto',
+                buttonStyles[button.style] || 'btn-accent'
+              );
               return external ? (
                 <a
                   key={button.label}

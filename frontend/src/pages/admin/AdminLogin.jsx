@@ -36,7 +36,7 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="grid min-h-screen bg-surface lg:grid-cols-[1.05fr_1fr]">
+    <div className="grid min-h-[100dvh] bg-surface lg:grid-cols-[1.05fr_1fr]">
       <div className="relative hidden overflow-hidden bg-[#070b12] lg:block">
         <img
           src="/images/worship.png"

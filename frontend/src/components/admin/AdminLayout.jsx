@@ -232,7 +232,7 @@ export function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-[100dvh] bg-surface">
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[17.5rem] flex-col bg-[#0b0a16] lg:flex">
         <SidebarContent
           user={user}

@@ -52,12 +52,13 @@ function ActivityRow({ activity }) {
             <Clock className="h-3 w-3" /> {formatTime(activity.startAt)}
           </span>
           {activity.location && (
-            <span className="inline-flex items-center gap-1">
-              <MapPin className="h-3 w-3" /> {activity.location}
+            <span className="inline-flex min-w-0 items-start gap-1">
+              <MapPin className="mt-px h-3 w-3 shrink-0" />{' '}
+              <span className="min-w-0">{activity.location}</span>
             </span>
           )}
         </span>
-        <span className="mt-1.5 block truncate font-display text-lg font-semibold text-ink transition-colors group-hover:text-accent">
+        <span className="mt-1.5 block line-clamp-2 font-display text-lg font-semibold leading-snug text-ink transition-colors group-hover:text-accent">
           {activity.title}
         </span>
       </span>
@@ -88,6 +89,8 @@ export default function HomePage() {
               <img
                 src={copy('home_welcome_image')}
                 alt={copy('home_welcome_image_alt')}
+                loading="lazy"
+                decoding="async"
                 className="aspect-[4/5] w-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#070b12]/78 via-transparent to-transparent" />
@@ -101,7 +104,13 @@ export default function HomePage() {
               </div>
             </div>
             <div className="absolute -bottom-10 -right-4 hidden w-56 overflow-hidden rounded-3xl border-4 border-surface shadow-lift sm:block lg:-right-10">
-              <img src={copy('home_welcome_small_image')} alt="Community outreach" className="aspect-[4/3] w-full object-cover" />
+              <img
+                src={copy('home_welcome_small_image')}
+                alt="Community outreach"
+                loading="lazy"
+                decoding="async"
+                className="aspect-[4/3] w-full object-cover"
+              />
             </div>
             <div className="absolute -left-4 top-8 hidden rotate-[-8deg] rounded-2xl border border-line bg-elevated/90 px-4 py-3 shadow-soft backdrop-blur lg:block">
               <p className="text-[0.55rem] font-semibold uppercase tracking-[0.2em] text-faint">{copy('home_badge_city')}</p>
@@ -291,6 +300,8 @@ export default function HomePage() {
         <img
           src={copy('home_cta_image')}
           alt=""
+          loading="lazy"
+          decoding="async"
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-[#060a12]/78" />
@@ -322,7 +333,13 @@ export default function HomePage() {
           <Reveal>
             <div className="grid overflow-hidden rounded-[2.5rem] border border-line bg-elevated lg:grid-cols-2">
               <div className="relative min-h-[20rem] overflow-hidden">
-                <img src={copy('home_giving_image')} alt="Serving our community" className="absolute inset-0 h-full w-full object-cover" />
+                <img
+                  src={copy('home_giving_image')}
+                  alt="Serving our community"
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#070b12]/80 via-[#070b12]/20 to-transparent" />
                 <div className="absolute inset-x-7 bottom-7">
                   <p className="text-[0.6rem] font-semibold uppercase tracking-[0.24em] text-[#e7c77e]">

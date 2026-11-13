@@ -38,15 +38,15 @@ export function ActivityCard({ activity, className }) {
           </p>
         )}
         <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[0.78rem] text-faint">
-          <span className="inline-flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5 text-accent/80" />
+          <span className="inline-flex min-w-0 items-center gap-1.5">
+            <Clock className="h-3.5 w-3.5 shrink-0 text-accent/80" />
             {formatTime(activity.startAt)}
             {activity.endAt ? ` – ${formatTime(activity.endAt)}` : ''}
           </span>
           {activity.location && (
-            <span className="inline-flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5 text-accent/80" />
-              {activity.location}
+            <span className="inline-flex min-w-0 items-start gap-1.5">
+              <MapPin className="mt-px h-3.5 w-3.5 shrink-0 text-accent/80" />
+              <span className="min-w-0">{activity.location}</span>
             </span>
           )}
         </div>

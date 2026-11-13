@@ -24,6 +24,7 @@ export function ImageWithFallback({ src, alt = '', className, imgClassName, load
       src={src}
       alt={alt}
       loading={loading}
+      decoding="async"
       onError={() => setFailed(true)}
       className={cn(className, imgClassName)}
       {...rest}

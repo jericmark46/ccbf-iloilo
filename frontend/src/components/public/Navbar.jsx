@@ -105,22 +105,22 @@ export function Navbar() {
 
   return (
     <>
-      <header className={cn('fixed inset-x-0 top-0 z-50 transition-all duration-500', headerTone)}>
+      <header className={cn('safe-top fixed inset-x-0 top-0 z-50 transition-all duration-500', headerTone)}>
         <AnimatePresence>
           {showAnnouncement && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 36, opacity: 1 }}
+              animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className={cn(
-                'overflow-hidden border-b text-[0.72rem] tracking-wide',
+                'overflow-hidden border-b text-[0.68rem] tracking-wide sm:text-[0.72rem]',
                 onTransparent
                   ? 'border-white/10 bg-white/[0.04] text-white/75'
                   : 'border-line/60 bg-elevated/60 text-soft'
               )}
             >
-              <div className="container-x flex h-9 items-center justify-center gap-2 text-center">
+              <div className="container-x flex min-h-9 items-center justify-center gap-2 py-2 text-center leading-snug">
                 <Sparkles
                   className={cn('h-3.5 w-3.5 shrink-0', onTransparent ? 'text-[#e7c77e]' : 'text-accent')}
                 />
@@ -128,7 +128,7 @@ export function Navbar() {
                   isExternalLink(announcement) ? (
                     <a
                       href={announcement.href}
-                      className="underline decoration-current/30 underline-offset-4 transition hover:text-white"
+                      className="line-clamp-2 underline decoration-current/30 underline-offset-4 transition hover:text-white sm:line-clamp-none"
                       target="_blank"
                       rel="noreferrer noopener"
                     >
@@ -137,20 +137,20 @@ export function Navbar() {
                   ) : (
                     <Link
                       to={announcement.href}
-                      className="underline decoration-current/30 underline-offset-4 transition hover:text-inherit hover:opacity-80"
+                      className="line-clamp-2 underline decoration-current/30 underline-offset-4 transition hover:text-inherit hover:opacity-80 sm:line-clamp-none"
                     >
                       {announcement.text}
                     </Link>
                   )
                 ) : (
-                  <span>{announcement.text}</span>
+                  <span className="line-clamp-2 sm:line-clamp-none">{announcement.text}</span>
                 )}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        <div className="container-x flex h-[74px] items-center justify-between gap-4">
+        <div className="container-x flex h-16 items-center justify-between gap-3 sm:h-[74px] sm:gap-4">
           <Logo className={onTransparent ? 'text-white' : 'text-ink'} />
 
           <nav className="hidden items-center lg:flex">
@@ -211,8 +211,8 @@ export function Navbar() {
               onClick={() => setSearchOpen(true)}
               className={cn(
                 onTransparent
-                  ? 'inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-white/10 text-white backdrop-blur-md transition hover:border-white/50 hover:bg-white/20'
-                  : 'icon-btn'
+                  ? 'inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/25 bg-white/10 text-white backdrop-blur-md transition hover:border-white/50 hover:bg-white/20'
+                  : 'icon-btn h-11 w-11'
               )}
               aria-label="Search"
               title="Search (Ctrl+K)"
@@ -253,7 +253,7 @@ export function Navbar() {
               type="button"
               onClick={() => setMobileOpen(true)}
               className={cn(
-                'inline-flex h-10 w-10 items-center justify-center rounded-full border transition lg:hidden',
+                'inline-flex h-11 w-11 items-center justify-center rounded-full border transition lg:hidden',
                 onTransparent
                   ? 'border-white/25 bg-white/10 text-white backdrop-blur-md hover:bg-white/20'
                   : 'border-line bg-elevated/60 text-soft hover:text-ink'
@@ -284,7 +284,7 @@ export function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="absolute right-0 top-0 flex h-full w-[88%] max-w-sm flex-col overflow-y-auto border-l border-line bg-surface"
+              className="absolute right-0 top-0 flex h-[100dvh] w-[88%] max-w-sm flex-col overflow-y-auto overscroll-contain border-l border-line bg-surface"
               aria-label="Mobile navigation"
             >
               <div className="flex items-center justify-between border-b border-line px-5 py-4">
@@ -292,21 +292,21 @@ export function Navbar() {
                 <button
                   type="button"
                   onClick={() => setMobileOpen(false)}
-                  className="icon-btn h-9 w-9"
+                  className="icon-btn h-11 w-11"
                   aria-label="Close menu"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
-              <div className="flex-1 px-4 py-5">
+              <div className="safe-bottom flex-1 px-4 pt-5">
                 <button
                   type="button"
                   onClick={() => {
                     setMobileOpen(false);
                     setSearchOpen(true);
                   }}
-                  className="mb-4 flex w-full items-center gap-3 rounded-2xl border border-line bg-elevated px-4 py-3 text-sm text-faint"
+                  className="mb-4 flex w-full items-center gap-3 rounded-2xl border border-line bg-elevated px-4 py-3.5 text-sm text-faint"
                 >
                   <Search className="h-4 w-4" />
                   Search the website…
@@ -323,7 +323,7 @@ export function Navbar() {
                           <NavAnchor
                             link={link}
                             className={cn(
-                              'flex-1 rounded-xl px-3 py-3 text-[0.95rem] font-medium transition',
+                              'flex-1 rounded-xl px-3 py-3.5 text-[0.95rem] font-medium transition',
                               active ? 'bg-accent/10 text-accent' : 'text-ink hover:bg-ink/5'
                             )}
                           >
@@ -333,7 +333,7 @@ export function Navbar() {
                             <button
                               type="button"
                               onClick={() => setExpanded(open ? null : link.id)}
-                              className="icon-btn h-9 w-9"
+                              className="icon-btn h-11 w-11"
                               aria-label={`${open ? 'Collapse' : 'Expand'} ${link.label}`}
                               aria-expanded={open}
                             >
@@ -349,7 +349,7 @@ export function Navbar() {
                               <NavAnchor
                                 key={child.id}
                                 link={child}
-                                className="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm text-soft transition hover:bg-accent/10 hover:text-accent"
+                                className="flex items-center justify-between rounded-lg px-3 py-3 text-sm text-soft transition hover:bg-accent/10 hover:text-accent"
                               >
                                 {child.label}
                                 <ArrowUpRight className="h-3.5 w-3.5 opacity-50" />
