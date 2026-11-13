@@ -5,8 +5,8 @@
   "type": "module",
   "description": "REST API for Calvary Chapel Iloilo",
   "scripts": {
-    "dev": "nodemon --watch src --watch scripts scripts/dev.js",
-    "start": "node scripts/dev.js",
+    "dev": "nodemon --watch src --watch index.js index.js",
+    "start": "node index.js",
     "seed": "node src/seed.js"
   },
   "config": {
