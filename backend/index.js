@@ -1,18 +1,18 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
-import compression from 'compression';
-import cookieParser from 'cookie-parser';
+import rateLimit from 'express-rate-limit';
+import multer from 'multer';
+import sanitizeHtml from 'sanitize-html';
+import slugify from 'slugify';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
-import './src/config/env.js';
-
-void cors;
-void helmet;
-void morgan;
-void compression;
-void cookieParser;
+void rateLimit;
+void multer;
+void sanitizeHtml;
+void slugify;
+void bcrypt;
+void jwt;
 
 const app = express();
 
