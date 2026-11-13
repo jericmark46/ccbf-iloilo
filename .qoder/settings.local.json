@@ -3,7 +3,8 @@
     "allow": [
       "Bash(node -v && npm -v && npm ping 2>&1 | tail -3)",
       "Bash(find \"D:/Calvary Chapel/Website\" -maxdepth 3 -iname \"vercel.json\" -o -maxdepth 3 -iname \"*.md\" -not -path \"*/node_modules/*\" | head -30)",
-      "Bash(cd \"D:/Calvary Chapel/Website\" && git status --short && git log --oneline -5)"
+      "Bash(cd \"D:/Calvary Chapel/Website\" && git status --short && git log --oneline -5)",
+      "Bash(git fetch origin && git status -sb && git log origin/main..main --oneline)"
     ]
   }
 }
