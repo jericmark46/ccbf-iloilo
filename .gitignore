@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+backend/.cache/
+backend/.data/
+backend/connection.txt
+backend/SA.txt
+backend/uploads/*
+!backend/uploads/.gitkeep
+vibe_images/
+npm-debug.log*
+.DS_Store
+Thumbs.db

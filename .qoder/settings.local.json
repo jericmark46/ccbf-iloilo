@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -v && npm -v && npm ping 2>&1 | tail -3)"
+    ]
+  }
+}
