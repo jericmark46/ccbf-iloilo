@@ -3,9 +3,17 @@ import User from '../models/User.js';
 
 export const COOKIE_NAME = 'cc_token';
 
+// On Vercel the admin UI and the API are separate sites (vercel.app is on the
+// public suffix list, so two *.vercel.app subdomains do not count as one site).
+// A Lax cookie is therefore rejected there with "rejected because it is in a
+// cross-site context", so None + Secure is forced on that deployment regardless
+// of COOKIE_SAMESITE. Locally the cookie stays Lax and non-secure so plain
+// http://localhost keeps working.
 const onVercel = Boolean(process.env.VERCEL);
-const sameSite = process.env.COOKIE_SAMESITE || (onVercel ? 'none' : 'lax');
-const secure = process.env.COOKIE_SECURE ? process.env.COOKIE_SECURE === 'true' : onVercel;
+const sameSite = onVercel ? 'none' : String(process.env.COOKIE_SAMESITE || 'lax').toLowerCase();
+// SameSite=None is only stored when it is paired with Secure; a mismatch makes
+// the browser drop the cookie entirely.
+const secure = onVercel || sameSite === 'none' || process.env.COOKIE_SECURE === 'true';
 
 export function signToken(user) {
   return jwt.sign({ sub: user._id.toString(), role: user.role }, process.env.JWT_SECRET, {
