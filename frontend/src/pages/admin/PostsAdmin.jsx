@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ExternalLink, Image as ImageIcon, Pencil, Pin, Plus, Trash2 } from 'lucide-react';
+import { ExternalLink, Image as ImageIcon, Newspaper, Pencil, Pin, Plus, Trash2 } from 'lucide-react';
 import { api, getError } from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 import { useDebounced } from '../../hooks/useUi';
@@ -21,6 +21,7 @@ const emptyPost = {
   coverImage: '',
   media: [],
   pinned: false,
+  inNewsFeed: false,
   published: true,
 };
 
@@ -122,6 +123,7 @@ export default function PostsAdmin() {
       coverImage: post.coverImage || '',
       media: post.media || [],
       pinned: Boolean(post.pinned),
+      inNewsFeed: Boolean(post.inNewsFeed),
       published: Boolean(post.published),
     });
     setFormOpen(true);
@@ -254,6 +256,11 @@ export default function PostsAdmin() {
                       {post.pinned && (
                         <Badge variant="accent">
                           <Pin className="h-2.5 w-2.5" /> Pinned
+                        </Badge>
+                      )}
+                      {post.inNewsFeed && (
+                        <Badge variant="accent">
+                          <Newspaper className="h-2.5 w-2.5" /> News feed
                         </Badge>
                       )}
                       <Badge variant={post.published ? 'success' : 'warning'}>
@@ -397,18 +404,32 @@ export default function PostsAdmin() {
             onChange={(media) => setForm((prev) => ({ ...prev, media }))}
           />
 
-          <label className="flex items-center gap-3 rounded-2xl border border-line bg-surface/60 px-4 py-3">
-            <input
-              type="checkbox"
-              className="h-4 w-4 rounded border-line accent-[rgb(var(--c-accent))]"
-              checked={form.pinned}
-              onChange={(event) => setForm((prev) => ({ ...prev, pinned: event.target.checked }))}
-            />
-            <span>
-              <span className="block text-sm font-medium text-ink">Pin this update</span>
-              <span className="text-xs text-soft">Pinned updates appear first on the updates page.</span>
-            </span>
-          </label>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <label className="flex items-center gap-3 rounded-2xl border border-line bg-surface/60 px-4 py-3">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-line accent-[rgb(var(--c-accent))]"
+                checked={form.pinned}
+                onChange={(event) => setForm((prev) => ({ ...prev, pinned: event.target.checked }))}
+              />
+              <span>
+                <span className="block text-sm font-medium text-ink">Pin this update</span>
+                <span className="text-xs text-soft">Pinned updates appear first on the updates page.</span>
+              </span>
+            </label>
+            <label className="flex items-center gap-3 rounded-2xl border border-line bg-surface/60 px-4 py-3">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-line accent-[rgb(var(--c-accent))]"
+                checked={form.inNewsFeed}
+                onChange={(event) => setForm((prev) => ({ ...prev, inNewsFeed: event.target.checked }))}
+              />
+              <span>
+                <span className="block text-sm font-medium text-ink">Show in news feed</span>
+                <span className="text-xs text-soft">Church happenings appear in the Facebook-style feed.</span>
+              </span>
+            </label>
+          </div>
         </form>
       </Modal>
 

@@ -1,21 +1,44 @@
 import { Router } from 'express';
+import mongoose from 'mongoose';
 import Post from '../../models/Post.js';
 import Comment from '../../models/Comment.js';
 import { resolveCategoryName } from '../../utils/categories.js';
 import { asyncHandler, assert, str, bool, parsePagination, escapeRegex } from '../../utils/http.js';
 import { cleanRichText } from '../../utils/richText.js';
+import { normalizeMediaItem } from '../../utils/videoProviders.js';
 
 const router = Router();
 
-function mediaList(value) {
+function mediaList(value, existingHype = new Map()) {
   if (!Array.isArray(value)) return [];
   return value
     .slice(0, 8)
-    .map((item) => ({
-      url: str(item?.url, 600),
-      type: item?.type === 'video' ? 'video' : 'image',
-    }))
-    .filter((item) => item.url);
+    .map((item) => {
+      const url = str(item?.url, 600);
+      if (!url) return null;
+
+      const normalized = normalizeMediaItem({ url, type: item?.type });
+      if (!normalized) {
+        if (item?.type === 'video') {
+          assert(
+            false,
+            400,
+            'Videos must be an uploaded MP4/WEBM/MOV file or a YouTube, Google Drive, or Facebook link.'
+          );
+        }
+        assert(false, 400, 'Please enter a valid image or video URL.');
+      }
+
+      const incomingId = item?._id || item?.id;
+      const mediaId = mongoose.isValidObjectId(incomingId) ? String(incomingId) : '';
+      return {
+        url,
+        ...normalized,
+        ...(mediaId ? { _id: mediaId } : {}),
+        hypeCount: mediaId ? existingHype.get(mediaId) || 0 : 0,
+      };
+    })
+    .filter(Boolean);
 }
 
 router.get(
@@ -55,6 +78,7 @@ router.post(
       media: mediaList(req.body.media),
       pinned: bool(req.body.pinned),
       published: bool(req.body.published, true),
+      inNewsFeed: bool(req.body.inNewsFeed),
       author: req.user._id,
       authorName: req.user.name,
     });
@@ -79,9 +103,15 @@ router.put(
       post.category = await resolveCategoryName(req.body.category, post.category);
     }
     if (req.body.coverImage !== undefined) post.coverImage = str(req.body.coverImage, 600);
-    if (req.body.media !== undefined) post.media = mediaList(req.body.media);
+    if (req.body.media !== undefined) {
+      const hypeByMedia = new Map(
+        (post.media || []).map((item) => [String(item._id), item.hypeCount || 0])
+      );
+      post.media = mediaList(req.body.media, hypeByMedia);
+    }
     if (req.body.pinned !== undefined) post.pinned = bool(req.body.pinned);
     if (req.body.published !== undefined) post.published = bool(req.body.published, true);
+    if (req.body.inNewsFeed !== undefined) post.inNewsFeed = bool(req.body.inNewsFeed);
 
     await post.save();
     res.json({ post });

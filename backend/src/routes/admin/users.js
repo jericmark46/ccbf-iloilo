@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import User from '../../models/User.js';
 import { asyncHandler, assert, str, bool } from '../../utils/http.js';
+import { sanitizePermissions } from '../../utils/permissions.js';
 
 const router = Router();
 const ROLES = ['superadmin', 'admin'];
@@ -29,6 +30,7 @@ router.post(
     const email = str(req.body.email, 160).toLowerCase();
     const password = String(req.body.password || '');
     const role = ROLES.includes(req.body.role) ? req.body.role : 'admin';
+    const permissions = sanitizePermissions(req.body.permissions);
 
     assert(name.length >= 2, 400, 'Please enter the account holder’s name.');
     assert(emailPattern.test(email), 400, 'Please enter a valid email address.');
@@ -37,7 +39,7 @@ router.post(
     const exists = await User.exists({ email });
     assert(!exists, 409, 'An account with that email already exists.');
 
-    const user = await User.create({ name, email, password, role });
+    const user = await User.create({ name, email, password, role, permissions });
     res.status(201).json({ user: user.toSafeJSON() });
   })
 );
@@ -72,6 +74,7 @@ router.put(
       }
     }
     if (req.body.role !== undefined) user.role = nextRole;
+    if (req.body.permissions !== undefined) user.permissions = sanitizePermissions(req.body.permissions);
     if (req.body.active !== undefined) user.active = nextActive;
 
     await user.save();

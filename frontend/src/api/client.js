@@ -67,10 +67,24 @@ api.interceptors.response.use(
     // A 401 here means the stored token is gone or rejected. Credential checks
     // such as /auth/login and /auth/password use 401 for a bad password too, so
     // they are deliberately excluded.
-    const isSessionProbe = /^\/admin\b/.test(url) || /^\/auth\/(me|profile)$/.test(url);
+    const isSessionProbe =
+      /^\/admin\b/.test(url) || /^\/auth\/(me|profile|heartbeat)$/.test(url);
     if (status === 401 && isSessionProbe) {
       tokenStore.clear();
-      if (url !== '/auth/me') window.dispatchEvent(new CustomEvent('cc:session-expired'));
+      if (error.response?.data?.code === 'SESSION_IDLE') {
+        try {
+          sessionStorage.setItem('cc_idle_notice', '1');
+        } catch {
+          /* storage unavailable */
+        }
+      }
+      if (url !== '/auth/me') {
+        window.dispatchEvent(
+          new CustomEvent('cc:session-expired', {
+            detail: { code: error.response?.data?.code || '' },
+          })
+        );
+      }
     }
     const friendlyMessage =
       error.response?.data?.error ||

@@ -1,7 +1,7 @@
 import { Suspense, lazy, useEffect } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { PublicLayout } from './components/public/PublicLayout';
-import { AdminLayout, RequireSuperadmin } from './components/admin/AdminLayout';
+import { AdminLayout, RequirePermission, RequireSuperadmin } from './components/admin/AdminLayout';
 import { FullPageLoader } from './components/ui/Loaders';
 import HomePage from './pages/public/HomePage';
 import UpdatesPage from './pages/public/UpdatesPage';
@@ -30,6 +30,9 @@ const UsersAdmin = lazy(() => import('./pages/admin/UsersAdmin'));
 const ActivityLogAdmin = lazy(() => import('./pages/admin/ActivityLogAdmin'));
 const SettingsAdmin = lazy(() => import('./pages/admin/SettingsAdmin'));
 const AccountAdmin = lazy(() => import('./pages/admin/AccountAdmin'));
+const SpecialAnnouncementAdmin = lazy(() => import('./pages/admin/SpecialAnnouncementAdmin'));
+const BackupAdmin = lazy(() => import('./pages/admin/BackupAdmin'));
+const NewsFeedPage = lazy(() => import('./pages/public/NewsFeedPage'));
 
 function ScrollManager() {
   const { pathname, hash, key } = useLocation();
@@ -76,6 +79,7 @@ export default function App() {
             <Route index element={<HomePage />} />
             <Route path="updates" element={<UpdatesPage />} />
             <Route path="updates/:id" element={<UpdateDetailPage />} />
+            <Route path="feed" element={<NewsFeedPage />} />
             <Route path="ministries" element={<MinistriesPage />} />
             <Route path="ministries/:slug" element={<MinistryDetailPage />} />
             <Route path="activities" element={<ActivitiesPage />} />
@@ -87,14 +91,70 @@ export default function App() {
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
-            <Route path="posts" element={<PostsAdmin />} />
-            <Route path="pages" element={<PagesAdmin />} />
-            <Route path="media" element={<MediaAdmin />} />
-            <Route path="comments" element={<CommentsAdmin />} />
-            <Route path="ministries" element={<MinistriesAdmin />} />
-            <Route path="activities" element={<ActivitiesAdmin />} />
-            <Route path="giving" element={<GivingAdmin />} />
-            <Route path="messages" element={<MessagesAdmin />} />
+            <Route
+              path="posts"
+              element={
+                <RequirePermission section="posts">
+                  <PostsAdmin />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="pages"
+              element={
+                <RequirePermission section="pages">
+                  <PagesAdmin />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="media"
+              element={
+                <RequirePermission section="media">
+                  <MediaAdmin />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="comments"
+              element={
+                <RequirePermission section="comments">
+                  <CommentsAdmin />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="ministries"
+              element={
+                <RequirePermission section="ministries">
+                  <MinistriesAdmin />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="activities"
+              element={
+                <RequirePermission section="activities">
+                  <ActivitiesAdmin />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="giving"
+              element={
+                <RequirePermission section="giving">
+                  <GivingAdmin />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="messages"
+              element={
+                <RequirePermission section="messages">
+                  <MessagesAdmin />
+                </RequirePermission>
+              }
+            />
             <Route
               path="navigation"
               element={
@@ -119,7 +179,30 @@ export default function App() {
                 </RequireSuperadmin>
               }
             />
-            <Route path="settings" element={<SettingsAdmin />} />
+            <Route
+              path="announcement"
+              element={
+                <RequireSuperadmin>
+                  <SpecialAnnouncementAdmin />
+                </RequireSuperadmin>
+              }
+            />
+            <Route
+              path="backup"
+              element={
+                <RequireSuperadmin>
+                  <BackupAdmin />
+                </RequireSuperadmin>
+              }
+            />
+            <Route
+              path="settings"
+              element={
+                <RequirePermission section="settings">
+                  <SettingsAdmin />
+                </RequirePermission>
+              }
+            />
             <Route path="account" element={<AccountAdmin />} />
             <Route path="*" element={<Navigate to="/admin" replace />} />
           </Route>

@@ -3,6 +3,8 @@ import {
   AlignCenter,
   AlignLeft,
   AlignRight,
+  ArrowDown,
+  ArrowUp,
   Baseline,
   Bold,
   Eraser,
@@ -31,8 +33,7 @@ import { MediaPicker } from './MediaPicker';
 import { Spinner } from '../ui/Loaders';
 import { cn } from '../../lib/utils';
 import { sanitizeRich, toEditorHtml } from '../../lib/richText';
-
-const isVideoUrl = (url = '') => /\.(mp4|webm|ogg|mov|m4v)(\?|#|$)/i.test(url);
+import { detectVideoProvider, isVideoUrl, providerLabel } from '../../lib/video';
 
 export function Field({ label, hint, required, error, children, className }) {
   return (
@@ -90,7 +91,7 @@ export function MediaField({ label, hint, value = '', onChange, type = 'image', 
   const fileRef = useRef(null);
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const video = type === 'video' || isVideoUrl(value);
+  const video = type === 'video' || isVideoUrl(value) || Boolean(detectVideoProvider(value));
 
   const uploadFile = async (file) => {
     if (!file) return;
@@ -541,8 +542,37 @@ export function MediaListField({ label, hint, items = [], onChange, className })
   const [url, setUrl] = useState('');
   const [type, setType] = useState('image');
 
-  const add = (next) => onChange([...(items || []), next]);
-  const remove = (index) => onChange(items.filter((_, position) => position !== index));
+  const list = items || [];
+  const add = (next) => onChange([...list, next]);
+  const remove = (index) => onChange(list.filter((_, position) => position !== index));
+  const move = (index, delta) => {
+    const target = index + delta;
+    if (target < 0 || target >= list.length) return;
+    const next = [...list];
+    [next[index], next[target]] = [next[target], next[index]];
+    onChange(next);
+  };
+
+  const detected = detectVideoProvider(url);
+  const linkInvalid = type === 'video' && Boolean(url.trim()) && !detected;
+
+  const changeUrl = (value) => {
+    setUrl(value);
+    if (detectVideoProvider(value)) setType('video');
+  };
+
+  const commitUrl = () => {
+    const trimmed = url.trim();
+    if (!trimmed) return;
+    const provider = detectVideoProvider(trimmed);
+    if (type === 'video' && !provider) {
+      toast.error('Use a YouTube, Google Drive, or Facebook link, or an MP4/WEBM/MOV file.');
+      return;
+    }
+    add({ url: trimmed, type: provider ? 'video' : 'image' });
+    setUrl('');
+    setType('image');
+  };
 
   const uploadFile = async (file) => {
     if (!file) return;
@@ -567,8 +597,9 @@ export function MediaListField({ label, hint, items = [], onChange, className })
   return (
     <Field label={label} hint={hint} className={className}>
       <div className="space-y-2.5">
-        {(items || []).map((item, index) => {
-          const video = item.type === 'video' || isVideoUrl(item.url);
+        {list.map((item, index) => {
+          const provider = detectVideoProvider(item.url)?.provider || (item.type === 'video' ? 'file' : '');
+          const video = Boolean(provider);
           return (
             <div
               key={`${item.url}-${index}`}
@@ -584,8 +615,28 @@ export function MediaListField({ label, hint, items = [], onChange, className })
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs text-ink">{item.url}</p>
                 <p className="mt-0.5 text-[0.62rem] uppercase tracking-[0.12em] text-faint">
-                  {video ? 'Video' : 'Image'}
+                  {video ? providerLabel(provider) : 'Image'}
                 </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-0.5">
+                <button
+                  type="button"
+                  className="icon-btn h-8 w-8"
+                  onClick={() => move(index, -1)}
+                  disabled={index === 0}
+                  aria-label="Move media earlier"
+                >
+                  <ArrowUp className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  className="icon-btn h-8 w-8"
+                  onClick={() => move(index, 1)}
+                  disabled={index === list.length - 1}
+                  aria-label="Move media later"
+                >
+                  <ArrowDown className="h-3.5 w-3.5" />
+                </button>
               </div>
               <a
                 href={item.url}
@@ -608,47 +659,60 @@ export function MediaListField({ label, hint, items = [], onChange, className })
           );
         })}
 
-        <div className="flex flex-col gap-2 rounded-2xl border border-dashed border-line p-3 sm:flex-row">
-          <input
-            className="field py-2.5"
-            value={url}
-            onChange={(event) => setUrl(event.target.value)}
-            placeholder="Paste a media URL"
-          />
-          <select className="field w-full py-2.5 sm:w-32" value={type} onChange={(event) => setType(event.target.value)}>
-            <option value="image">Image</option>
-            <option value="video">Video</option>
-          </select>
-          <button
-            type="button"
-            className="btn btn-outline btn-sm shrink-0"
-            onClick={() => {
-              if (!url.trim()) return;
-              add({ url: url.trim(), type });
-              setUrl('');
-            }}
-          >
-            <Link2 className="h-4 w-4" /> Add
-          </button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*,video/*"
-            className="hidden"
-            onChange={(event) => uploadFile(event.target.files?.[0])}
-          />
-          <button
-            type="button"
-            className="btn btn-accent btn-sm shrink-0"
-            onClick={() => fileRef.current?.click()}
-            disabled={uploading}
-          >
-            {uploading ? <Spinner className="h-4 w-4 text-current" /> : <Upload className="h-4 w-4" />}
-            {uploading ? 'Uploading…' : 'Upload'}
-          </button>
-          <button type="button" className="btn btn-ghost btn-sm shrink-0" onClick={() => setOpen(true)}>
-            <Library className="h-4 w-4" /> Library
-          </button>
+        <div className="space-y-2 rounded-2xl border border-dashed border-line p-3">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input
+              className="field py-2.5"
+              value={url}
+              onChange={(event) => changeUrl(event.target.value)}
+              placeholder="Paste a YouTube, Drive, or Facebook video link"
+              aria-invalid={linkInvalid}
+            />
+            <select
+              className="field w-full py-2.5 sm:w-32"
+              value={type}
+              onChange={(event) => setType(event.target.value)}
+              aria-label="Media type"
+            >
+              <option value="image">Image</option>
+              <option value="video">Video</option>
+            </select>
+            <button type="button" className="btn btn-outline btn-sm shrink-0" onClick={commitUrl}>
+              <Link2 className="h-4 w-4" /> Add
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*,video/*"
+              className="hidden"
+              onChange={(event) => uploadFile(event.target.files?.[0])}
+            />
+            <button
+              type="button"
+              className="btn btn-accent btn-sm shrink-0"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+            >
+              {uploading ? <Spinner className="h-4 w-4 text-current" /> : <Upload className="h-4 w-4" />}
+              {uploading ? 'Uploading…' : 'Upload'}
+            </button>
+            <button type="button" className="btn btn-ghost btn-sm shrink-0" onClick={() => setOpen(true)}>
+              <Library className="h-4 w-4" /> Library
+            </button>
+          </div>
+          {detected && (
+            <p className="text-[0.68rem] font-medium text-emerald-600 dark:text-emerald-300">
+              {providerLabel(detected.provider)} link detected — it will play as an embedded video.
+            </p>
+          )}
+          {linkInvalid && (
+            <p className="text-[0.68rem] text-red-500">
+              Use a YouTube, Google Drive, or Facebook link, or an MP4/WEBM/MOV file.
+            </p>
+          )}
+          <p className="text-[0.68rem] text-faint">
+            Videos always appear before photos on the public site. Use the arrows to order photos.
+          </p>
         </div>
       </div>
       <MediaPicker

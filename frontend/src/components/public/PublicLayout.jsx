@@ -4,6 +4,7 @@ import { useSite } from '../../context/SiteContext';
 import { useVisitTracker } from '../../hooks/useUi';
 import { Navbar } from './Navbar';
 import { Footer } from './Footer';
+import { SpecialAnnouncementModal } from './SpecialAnnouncementModal';
 import { FullPageLoader } from '../ui/Loaders';
 import { Logo } from '../ui/Logo';
 
@@ -41,6 +42,7 @@ export function PublicLayout() {
         <Outlet />
       </main>
       <Footer />
+      <SpecialAnnouncementModal />
     </div>
   );
 }

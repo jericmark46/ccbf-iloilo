@@ -1,8 +1,9 @@
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   CalendarDays,
+  DatabaseBackup,
   ExternalLink,
   FileText,
   HandCoins,
@@ -13,6 +14,7 @@ import {
   LayoutDashboard,
   Link2,
   LogOut,
+  Megaphone,
   Menu,
   MessageCircle,
   NotebookPen,
@@ -26,8 +28,10 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useToast } from '../../context/ToastContext';
 import { api } from '../../api/client';
+import { useIdleTimeout } from '../../hooks/useIdleTimeout';
 import { useLockBodyScroll } from '../../hooks/useUi';
 import { Logo } from '../ui/Logo';
+import { Modal } from '../ui/Modal';
 import { FullPageLoader, InlineLoader } from '../ui/Loaders';
 import { cn } from '../../lib/utils';
 
@@ -39,26 +43,28 @@ const sections = [
   {
     label: 'Content',
     items: [
-      { to: '/admin/posts', label: 'Updates', icon: NotebookPen },
-      { to: '/admin/pages', label: 'Pages', icon: FileText },
-      { to: '/admin/media', label: 'Media library', icon: Image },
-      { to: '/admin/settings', label: 'Site settings', icon: Settings2 },
+      { to: '/admin/posts', label: 'Updates', icon: NotebookPen, section: 'posts' },
+      { to: '/admin/pages', label: 'Pages', icon: FileText, section: 'pages' },
+      { to: '/admin/media', label: 'Media library', icon: Image, section: 'media' },
+      { to: '/admin/settings', label: 'Site settings', icon: Settings2, section: 'settings' },
     ],
   },
   {
     label: 'Community',
     items: [
-      { to: '/admin/comments', label: 'Comments', icon: MessageCircle },
-      { to: '/admin/ministries', label: 'Ministries', icon: HeartHandshake },
-      { to: '/admin/activities', label: 'Activities', icon: CalendarDays },
-      { to: '/admin/giving', label: 'Giving', icon: HandCoins },
-      { to: '/admin/messages', label: 'Inbox', icon: Inbox, badge: true },
+      { to: '/admin/comments', label: 'Comments', icon: MessageCircle, section: 'comments' },
+      { to: '/admin/ministries', label: 'Ministries', icon: HeartHandshake, section: 'ministries' },
+      { to: '/admin/activities', label: 'Activities', icon: CalendarDays, section: 'activities' },
+      { to: '/admin/giving', label: 'Giving', icon: HandCoins, section: 'giving' },
+      { to: '/admin/messages', label: 'Inbox', icon: Inbox, badge: true, section: 'messages' },
     ],
   },
   {
     label: 'Administration',
     superadmin: true,
     items: [
+      { to: '/admin/announcement', label: 'Special announcement', icon: Megaphone },
+      { to: '/admin/backup', label: 'Backup & restore', icon: DatabaseBackup },
       { to: '/admin/navigation', label: 'Navigation', icon: Link2 },
       { to: '/admin/users', label: 'Accounts', icon: Users },
       { to: '/admin/logs', label: 'Activity log', icon: History },
@@ -75,6 +81,8 @@ const titles = [
   { match: '/admin/activities', title: 'Activities' },
   { match: '/admin/giving', title: 'Giving' },
   { match: '/admin/messages', title: 'Inbox' },
+  { match: '/admin/announcement', title: 'Special announcement' },
+  { match: '/admin/backup', title: 'Backup & restore' },
   { match: '/admin/navigation', title: 'Navigation' },
   { match: '/admin/users', title: 'Accounts' },
   { match: '/admin/logs', title: 'Activity log' },
@@ -95,7 +103,7 @@ function initialsOf(name = '') {
     .toUpperCase();
 }
 
-function SidebarContent({ user, pathname, unread, onNavigate, onSignOut }) {
+function SidebarContent({ user, pathname, unread, onNavigate, onSignOut, canAccess }) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between gap-3 px-5 pb-5 pt-6">
@@ -108,6 +116,11 @@ function SidebarContent({ user, pathname, unread, onNavigate, onSignOut }) {
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-4">
         {sections
           .filter((section) => !section.superadmin || user?.role === 'superadmin')
+          .map((section) => ({
+            ...section,
+            items: section.items.filter((item) => !item.section || canAccess(item.section)),
+          }))
+          .filter((section) => section.items.length > 0)
           .map((section) => (
             <div key={section.label}>
               <p className="px-3 pb-2 text-[0.55rem] font-semibold uppercase tracking-[0.24em] text-white/30">
@@ -193,7 +206,7 @@ function SidebarContent({ user, pathname, unread, onNavigate, onSignOut }) {
 }
 
 export function AdminLayout() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, canAccess } = useAuth();
   const { cycleMode, resolvedMode } = useTheme();
   const toast = useToast();
   const location = useLocation();
@@ -207,8 +220,16 @@ export function AdminLayout() {
     titles.find((item) => item.match === '/admin' || location.pathname === item.match || location.pathname.startsWith(`${item.match}/`))
       ?.title || 'Dashboard';
 
+  const handleIdleTimeout = useCallback(async () => {
+    await logout();
+    toast.info('Signed out after 20 minutes of inactivity.');
+    navigate('/admin/login', { replace: true, state: { expired: 'idle' } });
+  }, [logout, toast, navigate]);
+
+  const idle = useIdleTimeout({ enabled: Boolean(user), onTimeout: handleIdleTimeout });
+
   useEffect(() => {
-    if (!user) return;
+    if (!user || !canAccess('messages')) return;
     let active = true;
     api
       .get('/admin/stats')
@@ -217,7 +238,7 @@ export function AdminLayout() {
     return () => {
       active = false;
     };
-  }, [user, location.pathname]);
+  }, [user, location.pathname, canAccess]);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -243,6 +264,7 @@ export function AdminLayout() {
           unread={unread}
           onNavigate={() => {}}
           onSignOut={signOut}
+          canAccess={canAccess}
         />
       </aside>
 
@@ -277,6 +299,7 @@ export function AdminLayout() {
                 unread={unread}
                 onNavigate={() => setMenuOpen(false)}
                 onSignOut={signOut}
+                canAccess={canAccess}
               />
             </motion.aside>
           </div>
@@ -302,16 +325,18 @@ export function AdminLayout() {
                 {title}
               </h2>
             </div>
-            <Link
-              to="/admin/messages"
-              className="icon-btn relative h-9 w-9"
-              aria-label="Open inbox"
-            >
-              <Inbox className="h-4 w-4" />
-              {unread > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-accent ring-2 ring-surface" />
-              )}
-            </Link>
+            {canAccess('messages') && (
+              <Link
+                to="/admin/messages"
+                className="icon-btn relative h-9 w-9"
+                aria-label="Open inbox"
+              >
+                <Inbox className="h-4 w-4" />
+                {unread > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-accent ring-2 ring-surface" />
+                )}
+              </Link>
+            )}
             <button
               type="button"
               onClick={cycleMode}
@@ -344,6 +369,37 @@ export function AdminLayout() {
           </Suspense>
         </main>
       </div>
+
+      <Modal
+        open={idle.warning}
+        onClose={idle.stayActive}
+        title="Still there?"
+        description="For your security, this workspace signs out after 20 minutes of inactivity."
+        size="sm"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={signOut}
+              className="btn btn-ghost btn-sm text-red-500 hover:bg-red-500/10"
+            >
+              Sign out now
+            </button>
+            <button type="button" onClick={idle.stayActive} className="btn btn-accent btn-sm">
+              Stay signed in
+            </button>
+          </>
+        }
+      >
+        <p className="text-sm leading-relaxed text-soft">
+          You will be signed out in{' '}
+          <span className="font-semibold text-ink">
+            {Math.floor(idle.remaining / 60)}:{String(idle.remaining % 60).padStart(2, '0')}
+          </span>
+          . Choose <span className="font-semibold text-ink">Stay signed in</span> to continue where
+          you left off.
+        </p>
+      </Modal>
     </div>
   );
 }
@@ -352,5 +408,13 @@ export function RequireSuperadmin({ children }) {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (user?.role !== 'superadmin') return <Navigate to="/admin" replace />;
+  return children;
+}
+
+export function RequirePermission({ section, children }) {
+  const { user, loading, canAccess } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/admin/login" replace />;
+  if (!canAccess(section)) return <Navigate to="/admin" replace />;
   return children;
 }

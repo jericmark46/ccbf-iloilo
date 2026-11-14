@@ -8,6 +8,7 @@ import Activity from './models/Activity.js';
 import GivingOption from './models/GivingOption.js';
 import SiteSettings from './models/SiteSettings.js';
 import UpdateCategory, { DEFAULT_CATEGORY_NAMES } from './models/UpdateCategory.js';
+import { DEFAULT_PERMISSIONS } from './utils/permissions.js';
 import { toSlug } from './utils/slug.js';
 
 const img = (name) => `/images/${name}.png`;
@@ -494,6 +495,12 @@ export async function seedDatabase({ reset = false } = {}) {
       UpdateCategory.deleteMany({}),
     ]);
   }
+
+  // Accounts created before section permissions existed keep full content access.
+  await User.updateMany(
+    { permissions: { $exists: false } },
+    { $set: { permissions: DEFAULT_PERMISSIONS } }
+  );
 
   const [superadmin] = await ensureUsers();
 

@@ -32,14 +32,14 @@ const greeting = () => {
 };
 
 const quickActions = [
-  { label: 'Write an update', hint: 'Share news with the church', to: '/admin/posts?compose=1', icon: NotebookPen },
-  { label: 'Upload media', hint: 'Photos, videos, and files', to: '/admin/media', icon: Camera },
-  { label: 'Edit home background', hint: 'Image or video hero', to: '/admin/settings?tab=background', icon: Image },
-  { label: 'Add an activity', hint: 'Gatherings and events', to: '/admin/activities?compose=1', icon: CalendarDays },
+  { label: 'Write an update', hint: 'Share news with the church', to: '/admin/posts?compose=1', icon: NotebookPen, section: 'posts' },
+  { label: 'Upload media', hint: 'Photos, videos, and files', to: '/admin/media', icon: Camera, section: 'media' },
+  { label: 'Edit home background', hint: 'Image or video hero', to: '/admin/settings?tab=background', icon: Image, section: 'settings' },
+  { label: 'Add an activity', hint: 'Gatherings and events', to: '/admin/activities?compose=1', icon: CalendarDays, section: 'activities' },
 ];
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, canAccess } = useAuth();
   const toast = useToast();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -89,9 +89,11 @@ export default function Dashboard() {
         description="Here is the pulse of Calvary Chapel Iloilo — what is being published, who is reaching out, and what is coming up."
         actions={
           <>
-            <Link to="/admin/posts?compose=1" className="btn btn-accent btn-sm">
-              <Plus className="h-3.5 w-3.5" /> New update
-            </Link>
+            {canAccess('posts') && (
+              <Link to="/admin/posts?compose=1" className="btn btn-accent btn-sm">
+                <Plus className="h-3.5 w-3.5" /> New update
+              </Link>
+            )}
             <Link to="/" className="btn btn-outline btn-sm">
               View website
             </Link>
@@ -209,12 +211,14 @@ export default function Dashboard() {
                 title="Recent updates"
                 description="The latest posts from the church."
                 actions={
-                  <Link
-                    to="/admin/posts"
-                    className="inline-flex items-center gap-1 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-accent hover:underline"
-                  >
-                    Manage <ArrowUpRight className="h-3.5 w-3.5" />
-                  </Link>
+                  canAccess('posts') && (
+                    <Link
+                      to="/admin/posts"
+                      className="inline-flex items-center gap-1 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-accent hover:underline"
+                    >
+                      Manage <ArrowUpRight className="h-3.5 w-3.5" />
+                    </Link>
+                  )
                 }
               />
               <div className="divide-y divide-line/70">
@@ -245,12 +249,14 @@ export default function Dashboard() {
                 title="Latest comments"
                 description="Engagement from the church family."
                 actions={
-                  <Link
-                    to="/admin/comments"
-                    className="inline-flex items-center gap-1 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-accent hover:underline"
-                  >
-                    Moderate <ArrowUpRight className="h-3.5 w-3.5" />
-                  </Link>
+                  canAccess('comments') && (
+                    <Link
+                      to="/admin/comments"
+                      className="inline-flex items-center gap-1 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-accent hover:underline"
+                    >
+                      Moderate <ArrowUpRight className="h-3.5 w-3.5" />
+                    </Link>
+                  )
                 }
               />
               <div className="divide-y divide-line/70">
@@ -276,7 +282,7 @@ export default function Dashboard() {
             <Panel>
               <PanelHeader title="Quick actions" description="Jump straight into the work." />
               <div className="grid gap-2 p-4 sm:grid-cols-2">
-                {quickActions.map((action) => {
+                {quickActions.filter((action) => canAccess(action.section)).map((action) => {
                   const Icon = action.icon;
                   return (
                     <Link
@@ -302,12 +308,14 @@ export default function Dashboard() {
                 title="Upcoming activities"
                 description="Gatherings on the calendar."
                 actions={
-                  <Link
-                    to="/admin/activities"
-                    className="inline-flex items-center gap-1 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-accent hover:underline"
-                  >
-                    Calendar <ArrowUpRight className="h-3.5 w-3.5" />
-                  </Link>
+                  canAccess('activities') && (
+                    <Link
+                      to="/admin/activities"
+                      className="inline-flex items-center gap-1 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-accent hover:underline"
+                    >
+                      Calendar <ArrowUpRight className="h-3.5 w-3.5" />
+                    </Link>
+                  )
                 }
               />
               <div className="divide-y divide-line/70">

@@ -9,6 +9,8 @@ import {
   clearAuthCookie,
   getRequestToken,
   requireAuth,
+  idleExpired,
+  touchActivity,
 } from '../middleware/auth.js';
 import { recordAudit } from '../middleware/audit.js';
 
@@ -36,7 +38,9 @@ router.post(
     assert(valid, 401, 'The email or password is incorrect.');
     assert(user.active, 403, 'This account has been deactivated. Please contact a superadmin.');
 
-    user.lastLogin = new Date();
+    const now = new Date();
+    user.lastLogin = now;
+    user.lastActiveAt = now;
     await user.save();
 
     const token = signToken(user);
@@ -72,10 +76,23 @@ router.get(
       const payload = jwt.verify(token, process.env.JWT_SECRET);
       const user = await User.findById(payload.sub);
       if (!user || !user.active) return res.json({ user: null });
+      if (idleExpired(user)) {
+        clearAuthCookie(res);
+        return res.json({ user: null, code: 'SESSION_IDLE' });
+      }
+      touchActivity(user);
       return res.json({ user: user.toSafeJSON() });
     } catch {
       return res.json({ user: null });
     }
+  })
+);
+
+router.post(
+  '/heartbeat',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    res.json({ ok: true, user: req.user.toSafeJSON() });
   })
 );
 

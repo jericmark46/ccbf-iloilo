@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Clock, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { getError } from '../../api/client';
@@ -8,7 +8,7 @@ import { Logo } from '../../components/ui/Logo';
 import { Spinner } from '../../components/ui/Loaders';
 
 export default function AdminLogin() {
-  const { user, login } = useAuth();
+  const { user, loading: authLoading, login } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,6 +17,23 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [idleNotice, setIdleNotice] = useState(false);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (location.state?.expired === 'idle') {
+      setIdleNotice(true);
+      return;
+    }
+    try {
+      if (sessionStorage.getItem('cc_idle_notice') === '1') {
+        sessionStorage.removeItem('cc_idle_notice');
+        setIdleNotice(true);
+      }
+    } catch {
+      /* storage unavailable */
+    }
+  }, [authLoading, location.state]);
 
   if (user) return <Navigate to={location.state?.from || '/admin'} replace />;
 
@@ -92,6 +109,14 @@ export default function AdminLogin() {
             <p className="mt-2 text-sm leading-relaxed text-soft">
               Sign in with the account a superadmin created for you.
             </p>
+
+            {idleNotice && (
+              <p className="mt-5 flex items-start gap-2.5 rounded-2xl border border-amber-500/25 bg-amber-500/[0.07] px-4 py-3 text-[0.72rem] leading-relaxed text-amber-700 dark:text-amber-300">
+                <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+                You were signed out after 20 minutes of inactivity. Sign in to pick up where you
+                left off.
+              </p>
+            )}
 
             <form onSubmit={onSubmit} className="mt-8 space-y-4">
               <label className="block">

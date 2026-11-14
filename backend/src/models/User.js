@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import { DEFAULT_PERMISSIONS } from '../utils/permissions.js';
 
 const userSchema = new mongoose.Schema(
   {
@@ -7,9 +8,11 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true, select: false },
     role: { type: String, enum: ['superadmin', 'admin'], default: 'admin', index: true },
+    permissions: { type: [String], default: () => [...DEFAULT_PERMISSIONS] },
     active: { type: Boolean, default: true },
     avatar: { type: String, default: '' },
     lastLogin: Date,
+    lastActiveAt: Date,
   },
   { timestamps: true, versionKey: false }
 );
@@ -30,9 +33,11 @@ userSchema.methods.toSafeJSON = function () {
     name: this.name,
     email: this.email,
     role: this.role,
+    permissions: this.permissions || [],
     active: this.active,
     avatar: this.avatar,
     lastLogin: this.lastLogin,
+    lastActiveAt: this.lastActiveAt,
     createdAt: this.createdAt,
   };
 };

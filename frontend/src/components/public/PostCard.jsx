@@ -6,6 +6,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { RichContent } from '../ui/Markdown';
 import { ImageWithFallback } from '../ui/ImageWithFallback';
+import { PostGallery } from './PostGallery';
+import { VideoEmbed } from './VideoEmbed';
 import { Badge } from '../ui/Badge';
 import { Spinner } from '../ui/Loaders';
 import { cn, initials } from '../../lib/utils';
@@ -49,6 +51,7 @@ export function PostCard({ post, initialCommentsOpen = false, className }) {
   }, [user, name]);
 
   const isLong = stripRich(post.content || '').length > 520;
+  const videos = (post.media || []).filter((item) => item?.url && item.type === 'video');
 
   const toggleLike = async () => {
     if (likePending) return;
@@ -188,6 +191,18 @@ export function PostCard({ post, initialCommentsOpen = false, className }) {
           </button>
         )}
 
+        {videos.length > 0 && (
+          <div className="mt-4 grid gap-3">
+            {videos.map((item, index) => (
+              <VideoEmbed
+                key={item.id || item._id || `${item.url}-${index}`}
+                item={item}
+                title={post.title || 'Church update'}
+              />
+            ))}
+          </div>
+        )}
+
         {post.coverImage && (
           <div className="mt-5 overflow-hidden rounded-2xl border border-line">
             <ImageWithFallback
@@ -198,29 +213,7 @@ export function PostCard({ post, initialCommentsOpen = false, className }) {
           </div>
         )}
 
-        {post.media?.length > 0 && (
-          <div className="mt-4 grid gap-2 sm:grid-cols-2">
-            {post.media.map((item, index) =>
-              item.type === 'video' ? (
-                <video
-                  key={`${item.url}-${index}`}
-                  src={item.url}
-                  controls
-                  playsInline
-                  preload="metadata"
-                  className="aspect-video w-full rounded-2xl border border-line bg-black object-contain sm:col-span-2"
-                />
-              ) : (
-                <ImageWithFallback
-                  key={`${item.url}-${index}`}
-                  src={item.url}
-                  alt=""
-                  className="max-h-[42rem] w-full rounded-2xl border border-line bg-ink/5 object-contain sm:col-span-2"
-                />
-              )
-            )}
-          </div>
-        )}
+        <PostGallery postId={post.id} media={post.media} title={post.title || 'Church update'} />
       </div>
 
       <div className="mt-5 flex items-center justify-between border-t border-line px-5 py-2.5 text-sm sm:px-6">

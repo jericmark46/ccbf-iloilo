@@ -23,10 +23,12 @@ const ENTITIES = {
   comments: { singular: 'comment', plural: 'comments', model: Comment },
   messages: { singular: 'message', plural: 'inbox', model: ContactMessage },
   settings: { singular: 'site setting', plural: 'site settings', model: null },
+  announcement: { singular: 'special announcement', plural: 'special announcements', model: null },
   nav: { singular: 'navigation link', plural: 'navigation links', model: NavLink },
   categories: { singular: 'update category', plural: 'update categories', model: UpdateCategory },
   users: { singular: 'account', plural: 'staff accounts', model: User },
   auth: { singular: 'session', plural: 'sessions', model: null },
+  backup: { singular: 'site backup', plural: 'site backups', model: null },
 };
 
 const LABEL_KEYS = ['title', 'name', 'label', 'email', 'subject'];
@@ -44,6 +46,7 @@ const BODY_KEYS = [
   'item',
   'message',
   'settings',
+  'announcement',
 ];
 // Free text and file lists would make the log unreadable.
 const IGNORED_FIELDS = new Set(['media', 'content', 'body', 'message', 'token']);
@@ -171,6 +174,11 @@ export function auditTrail(req, res, next) {
   if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') return next();
 
   const { path, entity, entityId } = routeParts(req.originalUrl || req.url);
+
+  // Backup routes log themselves: exports stream a file and restores report a
+  // summary, so the automatic "created" wording would be misleading.
+  if (path.startsWith('/api/admin/backup')) return next();
+
   const meta = metaFor(entity);
 
   // Deletes only return `{ ok: true }`, so note the label before it is gone.

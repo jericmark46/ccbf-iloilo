@@ -14,10 +14,20 @@ const postSchema = new mongoose.Schema(
       {
         url: { type: String, required: true },
         type: { type: String, enum: ['image', 'video'], default: 'image' },
+        // Set for videos: how the player should render this item.
+        provider: {
+          type: String,
+          enum: ['file', 'youtube', 'gdrive', 'facebook', null],
+          default: null,
+        },
+        embedUrl: { type: String, default: '' },
+        externalId: { type: String, default: '' },
+        hypeCount: { type: Number, default: 0, min: 0 },
       },
     ],
     pinned: { type: Boolean, default: false, index: true },
     published: { type: Boolean, default: true, index: true },
+    inNewsFeed: { type: Boolean, default: false, index: true },
     author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     authorName: { type: String, default: 'Church Admin' },
     likeCount: { type: Number, default: 0, min: 0 },
@@ -34,6 +44,10 @@ postSchema.set('toJSON', {
   transform: (_doc, ret) => {
     ret.id = ret._id.toString();
     if (ret.author) ret.author = ret.author.toString();
+    ret.media = (ret.media || []).map((item) => {
+      if (!item?._id) return item;
+      return { ...item, id: item._id.toString(), _id: item._id.toString() };
+    });
     delete ret._id;
     return ret;
   },

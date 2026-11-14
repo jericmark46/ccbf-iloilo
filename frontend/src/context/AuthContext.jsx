@@ -3,6 +3,15 @@ import { api, tokenStore } from '../api/client';
 
 const AuthContext = createContext(null);
 
+const noteIdleSignOut = (data) => {
+  if (data?.code !== 'SESSION_IDLE') return;
+  try {
+    sessionStorage.setItem('cc_idle_notice', '1');
+  } catch {
+    /* storage unavailable */
+  }
+};
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -12,6 +21,7 @@ export function AuthProvider({ children }) {
     (async () => {
       try {
         const { data } = await api.get('/auth/me');
+        noteIdleSignOut(data);
         if (!data.user) tokenStore.clear();
         if (mounted) setUser(data.user || null);
       } catch {
@@ -51,6 +61,7 @@ export function AuthProvider({ children }) {
   const refresh = useCallback(async () => {
     try {
       const { data } = await api.get('/auth/me');
+      noteIdleSignOut(data);
       if (!data.user) tokenStore.clear();
       setUser(data.user || null);
       return data.user;
@@ -60,19 +71,22 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const value = useMemo(
-    () => ({
+  const value = useMemo(() => {
+    const permissions = user?.permissions || [];
+    const isSuperadmin = user?.role === 'superadmin';
+    return {
       user,
       loading,
       isAuthenticated: Boolean(user),
-      isSuperadmin: user?.role === 'superadmin',
+      isSuperadmin,
+      permissions,
+      canAccess: (section) => isSuperadmin || permissions.includes(section),
       login,
       logout,
       refresh,
       setUser,
-    }),
-    [user, loading, login, logout, refresh]
-  );
+    };
+  }, [user, loading, login, logout, refresh]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

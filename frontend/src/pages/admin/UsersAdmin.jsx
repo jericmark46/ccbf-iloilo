@@ -20,6 +20,16 @@ import { Badge } from '../../components/ui/Badge';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { InlineLoader, Spinner } from '../../components/ui/Loaders';
 import { formatDate, relativeTime } from '../../lib/dates';
+import { ADMIN_PERMISSIONS, DEFAULT_PERMISSIONS } from '../../lib/permissions';
+
+const blankForm = {
+  name: '',
+  email: '',
+  password: '',
+  role: 'admin',
+  active: true,
+  permissions: [...DEFAULT_PERMISSIONS],
+};
 
 const initials = (name = '') =>
   name
@@ -40,7 +50,7 @@ export default function UsersAdmin() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'admin', active: true });
+  const [form, setForm] = useState(blankForm);
   const [saving, setSaving] = useState(false);
 
   const [resetUser, setResetUser] = useState(null);
@@ -68,7 +78,7 @@ export default function UsersAdmin() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ name: '', email: '', password: '', role: 'admin', active: true });
+    setForm({ ...blankForm, permissions: [...DEFAULT_PERMISSIONS] });
     setFormOpen(true);
   };
 
@@ -80,6 +90,7 @@ export default function UsersAdmin() {
       password: '',
       role: user.role || 'admin',
       active: Boolean(user.active),
+      permissions: Array.isArray(user.permissions) ? [...user.permissions] : [...DEFAULT_PERMISSIONS],
     });
     setFormOpen(true);
   };
@@ -87,7 +98,16 @@ export default function UsersAdmin() {
   const closeForm = () => {
     setFormOpen(false);
     setEditing(null);
-    setForm({ name: '', email: '', password: '', role: 'admin', active: true });
+    setForm(blankForm);
+  };
+
+  const togglePermission = (key) => {
+    setForm((prev) => ({
+      ...prev,
+      permissions: prev.permissions.includes(key)
+        ? prev.permissions.filter((item) => item !== key)
+        : [...prev.permissions, key],
+    }));
   };
 
   const save = async (event) => {
@@ -107,11 +127,23 @@ export default function UsersAdmin() {
     setSaving(true);
     try {
       if (editing) {
-        const payload = { name: form.name, email: form.email, role: form.role, active: form.active };
+        const payload = {
+          name: form.name,
+          email: form.email,
+          role: form.role,
+          active: form.active,
+          permissions: form.permissions,
+        };
         await api.put(`/admin/users/${editing.id}`, payload);
         toast.success('Account saved.');
       } else {
-        const payload = { name: form.name, email: form.email, password: form.password, role: form.role };
+        const payload = {
+          name: form.name,
+          email: form.email,
+          password: form.password,
+          role: form.role,
+          permissions: form.permissions,
+        };
         await api.post('/admin/users', payload);
         toast.success('Staff account created.');
       }
@@ -261,6 +293,13 @@ export default function UsersAdmin() {
                       <Badge variant={user.active ? 'success' : 'danger'}>
                         {user.active ? 'Active' : 'Disabled'}
                       </Badge>
+                      {user.role === 'superadmin' ? (
+                        <Badge variant="accent">Full access</Badge>
+                      ) : (
+                        <Badge>
+                          {(user.permissions || DEFAULT_PERMISSIONS).length} of {ADMIN_PERMISSIONS.length} sections
+                        </Badge>
+                      )}
                       <span className="text-[0.63rem] text-faint">
                         {user.lastLogin ? `Last seen ${relativeTime(user.lastLogin)}` : `Added ${formatDate(user.createdAt)}`}
                       </span>
@@ -355,6 +394,61 @@ export default function UsersAdmin() {
             <option value="admin">Admin — content & media</option>
             <option value="superadmin">Superadmin — full access</option>
           </SelectField>
+
+          {form.role === 'admin' && (
+            <Field
+              label="Sections this account can access"
+              hint="Media library access is needed if this person should upload images from other editors."
+            >
+              <div className="rounded-2xl border border-line bg-surface/60 p-3">
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2 px-1">
+                  <p className="text-[0.68rem] text-faint">
+                    {form.permissions.length} of {ADMIN_PERMISSIONS.length} selected
+                  </p>
+                  <div className="flex gap-1.5">
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      onClick={() =>
+                        setForm((prev) => ({ ...prev, permissions: [...DEFAULT_PERMISSIONS] }))
+                      }
+                    >
+                      Select all
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => setForm((prev) => ({ ...prev, permissions: [] }))}
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+                <div className="grid gap-1.5 sm:grid-cols-2">
+                  {ADMIN_PERMISSIONS.map((permission) => (
+                    <label
+                      key={permission.key}
+                      className="flex cursor-pointer items-start gap-2.5 rounded-xl px-2.5 py-2 transition hover:bg-ink/[0.03]"
+                    >
+                      <input
+                        type="checkbox"
+                        className="mt-0.5 h-4 w-4 shrink-0 rounded border-line accent-[rgb(var(--c-accent))]"
+                        checked={form.permissions.includes(permission.key)}
+                        onChange={() => togglePermission(permission.key)}
+                      />
+                      <span className="min-w-0">
+                        <span className="block text-xs font-medium text-ink">{permission.label}</span>
+                        <span className="mt-0.5 block text-[0.65rem] leading-snug text-faint">
+                          {permission.description}
+                        </span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </Field>
+          )}
+
           {editing && (
             <Switch
               label="Active account"

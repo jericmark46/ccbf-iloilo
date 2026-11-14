@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import mongoose from 'mongoose';
 import rateLimit from 'express-rate-limit';
 import SiteSettings from '../models/SiteSettings.js';
 import NavLink from '../models/NavLink.js';
@@ -73,9 +74,14 @@ router.get(
     ]);
 
     const settledSettings = settings || (await SiteSettings.create({ key: 'site' }));
+    const publicSettings = settledSettings.toJSON();
+    const special = publicSettings.specialAnnouncement;
+    if (!special?.enabled || !special.title || !special.message) {
+      delete publicSettings.specialAnnouncement;
+    }
 
     res.json({
-      settings: settledSettings,
+      settings: publicSettings,
       nav: buildNavTree(navLinks),
       posts,
       ministries,
@@ -92,6 +98,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const { page, limit, skip } = parsePagination(req.query);
     const filter = { published: true };
+    if (req.query.feed === '1' || req.query.feed === 'true') filter.inNewsFeed = true;
     if (req.query.category && req.query.category !== 'All') {
       filter.category = str(req.query.category, 40);
     }
@@ -160,6 +167,35 @@ router.post(
     const post = await Post.findOneAndUpdate(filter, { $inc: inc }, { new: true }).select('likeCount');
     assert(post, 404, 'That update could not be found.');
     res.json({ likeCount: post.likeCount });
+  })
+);
+
+router.post(
+  '/posts/:id/media/:mediaId/hype',
+  likeLimiter,
+  asyncHandler(async (req, res) => {
+    const { id, mediaId } = req.params;
+    const valid = mongoose.isValidObjectId(id) && mongoose.isValidObjectId(mediaId);
+    assert(valid, 404, 'That photo could not be found.');
+
+    const action = req.body.action === 'unhype' ? 'unhype' : 'hype';
+    const arrayFilter = { 'item._id': mediaId };
+    if (action === 'unhype') arrayFilter['item.hypeCount'] = { $gt: 0 };
+
+    const post = await Post.findOneAndUpdate(
+      { _id: id, published: true, 'media._id': mediaId },
+      { $inc: { 'media.$[item].hypeCount': action === 'unhype' ? -1 : 1 } },
+      { new: true, arrayFilters: [arrayFilter] }
+    ).select('media');
+
+    if (!post) {
+      const exists = await Post.exists({ _id: id, published: true, 'media._id': mediaId });
+      assert(exists, 404, 'That photo could not be found.');
+      return res.json({ mediaId, hypeCount: 0 });
+    }
+
+    const item = (post.media || []).find((entry) => String(entry._id) === mediaId);
+    res.json({ mediaId, hypeCount: item?.hypeCount || 0 });
   })
 );
 

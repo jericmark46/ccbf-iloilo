@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireRole } from '../../middleware/auth.js';
+import { requireRole, requirePermission } from '../../middleware/auth.js';
 import statsRouter from './stats.js';
 import postsRouter from './posts.js';
 import commentsRouter from './comments.js';
@@ -15,26 +15,32 @@ import categoriesRouter from './categories.js';
 import visitsRouter from './visits.js';
 import logsRouter from './logs.js';
 import usersRouter from './users.js';
+import announcementRouter from './announcement.js';
+import backupRouter from './backup.js';
 
 const router = Router();
 
-// Both admins and superadmins
+// Visible to every signed-in staff member (dashboard and traffic report).
 router.use('/stats', statsRouter);
-router.use('/posts', postsRouter);
-router.use('/comments', commentsRouter);
-router.use('/pages', pagesRouter);
-router.use('/ministries', ministriesRouter);
-router.use('/activities', activitiesRouter);
-router.use('/giving', givingRouter);
-router.use('/media', mediaRouter);
-router.use('/messages', messagesRouter);
-router.use('/settings', settingsRouter);
 router.use('/visits', visitsRouter);
-// Readable by every admin (the update editor needs it); writes are superadmin-only.
-router.use('/categories', categoriesRouter);
+
+// Content sections assigned per account by a superadmin.
+router.use('/posts', requirePermission('posts'), postsRouter);
+router.use('/comments', requirePermission('comments'), commentsRouter);
+router.use('/pages', requirePermission('pages'), pagesRouter);
+router.use('/ministries', requirePermission('ministries'), ministriesRouter);
+router.use('/activities', requirePermission('activities'), activitiesRouter);
+router.use('/giving', requirePermission('giving'), givingRouter);
+router.use('/media', requirePermission('media'), mediaRouter);
+router.use('/messages', requirePermission('messages'), messagesRouter);
+router.use('/settings', requirePermission('settings'), settingsRouter);
+// The update editor needs the category list; writes inside are superadmin-only.
+router.use('/categories', requirePermission('posts'), categoriesRouter);
 
 // Superadmin only
 router.use('/nav', requireRole('superadmin'), navRouter);
+router.use('/announcement', requireRole('superadmin'), announcementRouter);
+router.use('/backup', requireRole('superadmin'), backupRouter);
 router.use('/logs', logsRouter); // guards itself; read-only audit trail
 router.use('/users', requireRole('superadmin'), usersRouter);
 

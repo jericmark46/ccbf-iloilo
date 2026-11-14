@@ -82,6 +82,15 @@ const settingsSchema = new mongoose.Schema(
       },
     ],
 
+    specialAnnouncement: {
+      enabled: { type: Boolean, default: false },
+      title: { type: String, default: '' },
+      message: { type: String, default: '' },
+      image: { type: String, default: '' },
+      version: { type: Number, default: 0 },
+      updatedAt: { type: Date, default: null },
+    },
+
     footerNote: { type: String, default: '' },
     copy: { type: mongoose.Schema.Types.Mixed, default: {} },
     theme: {

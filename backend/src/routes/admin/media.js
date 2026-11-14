@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Media from '../../models/Media.js';
 import { asyncHandler, assert, str, parsePagination } from '../../utils/http.js';
+import { detectVideoProvider } from '../../utils/videoProviders.js';
 import { upload, uploadDir } from '../../middleware/upload.js';
 
 const router = Router();
@@ -52,7 +53,7 @@ router.post(
 
     const media = await Media.create({
       url,
-      type: req.body.type === 'video' ? 'video' : 'image',
+      type: detectVideoProvider(url) ? 'video' : req.body.type === 'video' ? 'video' : 'image',
       originalName: str(req.body.originalName, 200) || 'Linked media',
       uploadedBy: req.user._id,
     });

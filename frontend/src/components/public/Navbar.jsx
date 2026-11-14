@@ -7,6 +7,7 @@ import {
   Heart,
   LayoutDashboard,
   Menu,
+  Newspaper,
   Search,
   Sparkles,
   X,
@@ -155,6 +156,18 @@ export function Navbar() {
 
           <nav className="hidden items-center lg:flex">
             <div className={cn('flex items-center gap-0.5 rounded-full border px-1.5 py-1.5 backdrop-blur-md', pillTone)}>
+              <Link
+                to="/feed"
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[0.82rem] font-medium transition-colors duration-300',
+                  linkTone,
+                  location.pathname === '/feed' && activeTone
+                )}
+              >
+                <Newspaper className="h-3.5 w-3.5" />
+                <span className="hidden xl:inline">News feed</span>
+                <span className="xl:hidden">Feed</span>
+              </Link>
               {nav.map((link) => {
                 const active = isActive(link.href);
                 const hasChildren = link.children?.length > 0;
@@ -311,6 +324,22 @@ export function Navbar() {
                   <Search className="h-4 w-4" />
                   Search the website…
                 </button>
+
+                <Link
+                  to="/feed"
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(
+                    'mb-3 flex items-center justify-between gap-3 rounded-2xl border px-4 py-3.5 text-sm font-medium transition',
+                    location.pathname === '/feed'
+                      ? 'border-accent/40 bg-accent/10 text-accent'
+                      : 'border-line bg-elevated text-ink hover:border-accent/30'
+                  )}
+                >
+                  <span className="inline-flex items-center gap-2.5">
+                    <Newspaper className="h-4 w-4" /> News feed
+                  </span>
+                  <ArrowUpRight className="h-4 w-4 opacity-50" />
+                </Link>
 
                 <nav className="space-y-1">
                   {nav.map((link) => {
