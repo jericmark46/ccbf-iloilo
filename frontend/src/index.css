@@ -489,6 +489,16 @@
   -webkit-mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
   mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
 }
+.logo-trace-mask {
+  -webkit-mask-image: url('/images/cci-white.png');
+  mask-image: url('/images/cci-white.png');
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
 
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -45,12 +45,16 @@ export default {
           '0%': { opacity: 0, transform: 'translateY(18px)' },
           '100%': { opacity: 1, transform: 'translateY(0)' },
         },
+        spinReverse: {
+          to: { transform: 'rotate(-360deg)' },
+        },
       },
       animation: {
         float: 'float 6s ease-in-out infinite',
         shimmer: 'shimmer 2.4s linear infinite',
         kenburns: 'kenburns 24s ease-out infinite alternate',
         rise: 'rise .7s cubic-bezier(.16,1,.3,1) both',
+        'spin-reverse': 'spinReverse 2s linear infinite',
       },
     },
   },

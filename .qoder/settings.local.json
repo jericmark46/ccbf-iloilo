@@ -5,7 +5,12 @@
       "Bash(find \"D:/Calvary Chapel/Website\" -maxdepth 3 -iname \"vercel.json\" -o -maxdepth 3 -iname \"*.md\" -not -path \"*/node_modules/*\" | head -30)",
       "Bash(cd \"D:/Calvary Chapel/Website\" && git status --short && git log --oneline -5)",
       "Bash(git fetch origin && git status -sb && git log origin/main..main --oneline)",
-      "Bash(cd \"D:\\\\Calvary Chapel\\\\Website\" && git status --short && git log --oneline -5)"
+      "Bash(cd \"D:\\\\Calvary Chapel\\\\Website\" && git status --short && git log --oneline -5)",
+      "Bash(ls -la \"D:/Calvary Chapel\" && echo \"---NESTED GIT REPOS---\" && find \"D:/Calvary Chapel\" -maxdepth 3 -name \".git\" -type d 2>/dev/null)",
+      "Read(//d/**)",
+      "Bash(git -C \"D:/Calvary Chapel/Website/ccbf-iloilo\" remote -v && echo \"---BRANCH---\" && git -C \"D:/Calvary Chapel/Website/ccbf-iloilo\" branch -a -vv && echo \"---HEAD COMMIT---\" && git -C \"D:/Calvary Chapel/Website/ccbf-iloilo\" log -1 --format='%H%n%ci%n%s' HEAD)",
+      "Bash(git -C \"D:/Calvary Chapel/Website/ccbf-iloilo\" log --oneline --graph --decorate -15 && echo \"---STATUS---\" && git -C \"D:/Calvary Chapel/Website/ccbf-iloilo\" status --short --branch && echo \"---STASH---\" && git -C \"D:/Calvary Chapel/Website/ccbf-iloilo\" stash list)",
+      "Bash(ls -la \"D:/Calvary Chapel/Website\" && echo \"---NESTED DIR---\" && ls -la \"D:/Calvary Chapel/Website/ccbf-iloilo\" | head -40)"
     ]
   }
 }
