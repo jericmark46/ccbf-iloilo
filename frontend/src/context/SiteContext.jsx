@@ -8,9 +8,8 @@ export function SiteProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const load = useCallback(async (silent = false, minimumDuration = 0) => {
+  const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
-    const startedAt = Date.now();
     try {
       const response = await api.get('/public/bootstrap');
       setData(response.data);
@@ -18,14 +17,12 @@ export function SiteProvider({ children }) {
     } catch (err) {
       setError(getError(err));
     } finally {
-      const remaining = minimumDuration - (Date.now() - startedAt);
-      if (remaining > 0) await new Promise((resolve) => setTimeout(resolve, remaining));
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    load(false, 3000);
+    load();
   }, [load]);
 
   const value = useMemo(
